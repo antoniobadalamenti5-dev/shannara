@@ -17,6 +17,9 @@ func _ready() -> void:
 func _init() -> void:
 	max_hp = 50
 	current_hp = 50
+	grid_x = 10
+	grid_y = 10
+	grid_elevation = 0
 
 func can_act() -> bool:
 	return is_alive() and TurnManager.is_enemy_turn()

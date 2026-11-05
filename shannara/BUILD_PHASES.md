@@ -535,6 +535,7 @@ func resolve_adjacent_attack(attacker, target) -> dict:
 | **Fase 0** | 2-3h | ✅ COMPLETATA |
 | **Fase 1** | 7h | ✅ COMPLETATA |
 | **Fase 2** | 4h | ✅ COMPLETATA |
+| **Fase 3** | 3h | ✅ COMPLETATA |
 
 ### Test Suite Aggiunta (6 file)
 - `tests/test_grid_cell.gd` - Verifica GridCell e TerrainType

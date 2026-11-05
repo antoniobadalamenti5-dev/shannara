@@ -10,6 +10,9 @@ signal moved_to(x: int, y: int, elevation: int)
 func _init() -> void:
 	max_hp = 100
 	current_hp = 100
+	grid_x = 5
+	grid_y = 5
+	grid_elevation = 0
 
 func can_act() -> bool:
 	return is_alive() and TurnManager.is_player_turn()

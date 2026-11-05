@@ -13,6 +13,12 @@ var grid_elevation: int = 0
 func _ready() -> void:
 	current_hp = max_hp
 
+	# Auto-add to appropriate group based on class
+	if self is Player:
+		add_to_group("players")
+	elif self is Enemy:
+		add_to_group("enemies")
+
 func take_damage(amount: int) -> void:
 	current_hp = max(0, current_hp - abs(amount))
 

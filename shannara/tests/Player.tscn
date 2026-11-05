@@ -1,0 +1,11 @@
+[gd_scene load_steps=1 format=3]
+
+[node name="Player" type="Node2D"]
+script = ExtResource( str="2" )
+
+[child name="Sprite2D" type="Sprite2D"]
+texture = null
+parent = "."
+
+[editable]
+Player/true

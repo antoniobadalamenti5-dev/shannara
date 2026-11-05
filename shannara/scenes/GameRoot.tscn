@@ -2,24 +2,38 @@
 
 [ext_resource path="res://utils/GridSystem.gd" type="Script" id=1]
 [ext_resource path="res://utils/TurnManager.gd" type="Script" id=2]
+[ext_resource path="res://actors/Player.gd" type="Script" id=3]
+[ext_resource path="res://actors/Enemy.gd" type="Script" id=4]
 
 [node name="Root" type="Node2D"]
-script = ExtResource( str="2" )
 
-[node name="GridSystem" type="Node" instance=ExtResource( str="1" )]
+[node name="GridSystem" type="Node"]
+script = ExtResource( str="1" )
 parent = "."
 
 [node name="TurnManager" type="Node"]
 script = ExtResource( str="2" )
 parent = "."
 
-[child name="Player" instance=ExtResource( str="" )]
+[node name="Player" type="Node2D"]
+script = ExtResource( str="3" )
 parent = "."
 
-[child name="Enemy" instance=ExtResource( str="" )]
+[node name="Enemy" type="Node2D"]
+script = ExtResource( str="4" )
+parent = "."
+
+[node name="Camera2D" type="Camera2D"]
+anchor_mode = 2
+process_mode = 0
+drag_margin_h = 0
+drag_margin_v = 0
+current = true
 parent = "."
 
 [editable]
-root/true
+Root/true
 GridSystem/true
 TurnManager/true
+Player/true
+Enemy/true

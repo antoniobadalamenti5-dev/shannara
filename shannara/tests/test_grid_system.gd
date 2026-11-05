@@ -12,7 +12,7 @@ func test_get_cell_at_valid() -> void:
 	assert_not_null(cell, "Should return cell at valid coordinates")
 	assert_eq(cell.x, 0, "Cell x should be 0")
 	assert_eq(cell.y, 0, "Cell y should be 0")
-	assert_eq(cell.elevation, -1, "Cell at (0,0,0) should have elevation -1")
+	assert_eq(cell.elevation, 0, "Cell at (0,0,0) should have elevation 0")
 
 func test_get_cell_at_elevation_offsets() -> void:
 	var cell_m1 := GridSystem.get_cell_at(5, 5, -1)

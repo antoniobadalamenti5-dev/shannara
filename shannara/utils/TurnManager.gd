@@ -37,8 +37,10 @@ func _process_enemy_turn() -> void:
 		return
 
 	var enemies := get_tree().get_nodes_in_group("enemies")
-	for enemy in enemies:
-		if enemy.is_alive() and enemy.can_act():
+	var enemies_array := enemies.duplicate()  # Avoid modification during iteration
+
+	for enemy in enemies_array:
+		if enemy != null and enemy.is_alive() == true and enemy.can_act() == true:
 			enemy.take_action(player.grid_x, player.grid_y)
 
 	# Signal completion and proceed to player turn
