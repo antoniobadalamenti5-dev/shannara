@@ -6,6 +6,7 @@ class_name Player
 extends ActorController
 
 signal moved_to(x: int, y: int, elevation: int)
+signal attacked(target_x: int, target_y: int, damage: int)
 
 func _init() -> void:
 	max_hp = 100
@@ -43,6 +44,26 @@ func move_to_elevation(delta_elev: int) -> bool:
 		TurnManager.consume_action()
 		moved_to.emit(grid_x, grid_y, target_elev)
 		return true
+	return false
+
+func attack_direction(dx: int, dy: int) -> bool:
+	"""Attack adjacent cell in direction. Consumes 1 turn on success."""
+	if not can_act():
+		return false
+
+	var target_x := grid_x + dx
+	var target_y := grid_y + dy
+	var target_elev := grid_elevation
+
+	# Find enemy at target position
+	var enemies := get_tree().get_nodes_in_group("enemies")
+	for enemy in enemies:
+		if enemy != null and enemy.is_alive() and enemy.grid_x == target_x and enemy.grid_y == target_y and enemy.grid_elevation == target_elev:
+			var result := CombatResolver.resolve_attack(self, enemy)
+			if result.success:
+				TurnManager.consume_action()
+				attacked.emit(target_x, target_y, result.damage)
+				return true
 	return false
 
 func _attempt_move_to(target_x: int, target_y: int, target_elev: int) -> bool:

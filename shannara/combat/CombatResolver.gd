@@ -20,6 +20,7 @@ func resolve_attack(attacker: ActorController, target: ActorController) -> Dicti
 	}
 
 	if target == null or not target.is_alive():
+		result.target_killed = true
 		return result
 
 	var is_adjacent := abs(attacker.grid_x - target.grid_x) + abs(attacker.grid_y - target.grid_y) <= 1
@@ -31,4 +32,7 @@ func resolve_attack(attacker: ActorController, target: ActorController) -> Dicti
 	target.take_damage(result.damage)
 
 	result.target_killed = not target.is_alive()
+	if result.target_killed:
+		# Clear grid occupant on death
+		GridSystem.set_occupant(target.grid_x, target.grid_y, target.grid_elevation, null)
 	return result

@@ -41,10 +41,29 @@ func take_action(target_x: int, target_y: int) -> bool:
 	# Update state based on player position
 	update_state(target_x, target_y)
 
+	# Check if player is adjacent - attack first
+	var player := TurnManager.player
+	if player != null and player.is_alive():
+		var distance := abs(grid_x - player.grid_x) + abs(grid_y - player.grid_y)
+		if distance <= 1 and grid_elevation == player.grid_elevation:
+			return _attack_player()
+
 	if state == EnemyState.HUNT:
 		return _hunt_action(target_x, target_y)
 	elif state == EnemyState.PATROL:
 		return _patrol_action()
+	return false
+
+func _attack_player() -> bool:
+	"""Attack the player if adjacent."""
+	var player := TurnManager.player
+	if player == null or not player.is_alive():
+		return false
+
+	var result := CombatResolver.resolve_attack(self, player)
+	if result.success:
+		TurnManager.consume_action()
+		return true
 	return false
 
 func _hunt_action(target_x: int, target_y: int) -> bool:
