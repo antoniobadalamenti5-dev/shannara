@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[node name="Camera2D" type="Camera2D"]
+anchor_mode = 2
+process_mode = 0
+drag_margin_h = 0
+drag_margin_v = 0
+
+[node name="Anchor" type="Node2D"]
+parent = "."
