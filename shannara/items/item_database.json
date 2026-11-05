@@ -1,0 +1,16 @@
+{
+  "items": {
+    "healing_potion": {
+      "name": "Pozione Curativa",
+      "type": "consumable",
+      "hp_restore": 15,
+      "description": "Ripristina 15 PV"
+    },
+    "wooden_sword": {
+      "name": "Spada di Legno",
+      "type": "weapon",
+      "atk_bonus": 3,
+      "description": "+3 Attacco"
+    }
+  }
+}
