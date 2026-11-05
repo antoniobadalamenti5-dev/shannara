@@ -63,3 +63,92 @@ func can_move_to(from_x: int, from_y: int, from_elev: int, to_x: int, to_y: int,
 		# Can only change elevation at stairs/bridge cells
 		return true
 	return true
+
+func get_neighbors(x: int, y: int, elevation: int) -> Array:
+	"""Returns list of walkable neighboring cells [x, y, elevation] format"""
+	var neighbors := []
+	# 4-directional movement
+	var directions := [
+		Vector2i(0, -1),  # up
+		Vector2i(0, 1),   # down
+		Vector2i(-1, 0),  # left
+		Vector2i(1, 0)    # right
+	]
+
+	for dir in directions:
+		var nx := x + dir.x
+		var ny := y + dir.y
+		if is_cell_walkable(nx, ny, elevation):
+			neighbors.append([nx, ny, elevation])
+		# Check elevation transitions (stairs/bridges)
+		if is_cell_walkable(nx, ny, elevation + 1):
+			neighbors.append([nx, ny, elevation + 1])
+		if is_cell_walkable(nx, ny, elevation - 1):
+			neighbors.append([nx, ny, elevation - 1])
+
+	return neighbors
+
+func find_path(start_x: int, start_y: int, start_elev: int, target_x: int, target_y: int, target_elev: int) -> Array:
+	"""Simple A* pathfinding on grid with elevation support. Returns array of [x, y, elevation] positions or empty if no path"""
+	if not is_cell_walkable(target_x, target_y, target_elev):
+		return []
+
+	var open_set := []
+	var closed_set := {}
+	var came_from := {}
+
+	var start_hash := "%d,%d,%d" % [start_x, start_y, start_elev]
+	open_set.append([0, start_x, start_y, start_elev])
+	came_from[start_hash] = null
+
+	while open_set.size() > 0:
+		open_set.sort()
+		var current := open_set.pop_front()
+		var current_f := current[0]
+		var current_x := current[1]
+		var current_y := current[2]
+		var current_elev := current[3]
+
+		var current_key := "%d,%d,%d" % [current_x, current_y, current_elev]
+
+		if current_x == target_x and current_y == target_y and current_elev == target_elev:
+			# Reconstruct path
+			var path := []
+			var key := current_key
+			while key != null:
+				var parts := key.split(",")
+				path.push_front([int(parts[0]), int(parts[1]), int(parts[2])])
+				key = came_from[key]
+			return path
+
+		closed_set[current_key] = true
+
+		# Check neighbors
+		var neighbors := get_neighbors(current_x, current_y, current_elev)
+		for neighbor in neighbors:
+			var nx := neighbor[0]
+			var ny := neighbor[1]
+			var ne := neighbor[2]
+			var neighbor_key := "%d,%d,%d" % [nx, ny, ne]
+
+			if closed_set.has(neighbor_key):
+				continue
+
+			var g_score := 0
+			# Simple distance heuristic
+			var g_cost := abs(nx - target_x) + abs(ny - target_y) + abs(ne - target_elev)
+			var f_score := g_cost
+
+			var in_open := false
+			for i in open_set:
+				if i[1] == nx and i[2] == ny and i[3] == ne:
+					in_open = true
+					if f_score < i[0]:
+						i[0] = f_score
+					break
+
+			if not in_open:
+				open_set.append([f_score, nx, ny, ne])
+				came_from[neighbor_key] = current_key
+
+	return []  # No path found
