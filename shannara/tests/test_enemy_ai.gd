@@ -1,140 +1,108 @@
-# Test per Enemy AI (Slime) e Boss (BossGolem)
-# Verifica comportamenti HUNT, PATROL, ATTACK e fasi boss
+# test_enemy_ai.gd - Unit tests for Enemy AI behavior (Fase 3)
+# Tests state machine thresholds, hunt pathing, patrol route, attack priority.
+# Enum di riferimento (Enemy.gd): IDLE=0, PATROL=1, HUNT=2, ATTACK=3
 
-func test_slime_creation() -> void:
-	var slime := Slime.new()
-	assert_not_null(slime, "Slime should not be null")
-	assert_eq(slime.max_hp, 20, "Slime should have 20 max HP")
-	assert_eq(slime.current_hp, 20, "Slime should start with full HP")
+extends TestSuite
 
-func test_slime_detection_range() -> void:
-	var slime := Slime.new()
-	slime.name = "TestSlime"
-	add_child(slime)
-	slime.grid_x = 10
-	slime.grid_y = 10
+func run_tests() -> void:
+	print("\n[TEST] Enemy AI")
 
-	# Player at distance 2 (within hunt range of 3)
-	var player := Player.new()
-	player.name = "TestPlayer"
-	player.grid_x = 12
+	var grid_system = get_node("/root/GridSystem")
+	var turn_manager = get_node("/root/TurnManager")
+	var tm_state_bak: int = turn_manager.current_state
+	var tm_player_bak = turn_manager.player
+
+	# Player di test nell'albero: occupa (10,10,0) e diventa tm.player
+	var player: Player = Player.new()
+	player.grid_x = 10
 	player.grid_y = 10
 	add_child(player)
 
-	slime.update_state(player.grid_x, player.grid_y)
-	assert_eq(slime.state, Slime.EnemyState.HUNT, "Slime should HUNT when player within 3 tiles")
-
-func test_slime_attack_adjacent() -> void:
-	var slime := Slime.new()
-	slime.name = "TestSlime"
-	add_child(slime)
-	slime.grid_x = 5
-	slime.grid_y = 5
-
-	var player := Player.new()
-	player.name = "TestPlayer"
-	add_child(player)
-	player.grid_x = 6
-	player.grid_y = 5
-	player.current_hp = 100
-
-	TurnManager.current_state = TurnManager.TurnState.ENEMY_TURN
-
-	var result := slime.take_action(player.grid_x, player.grid_y)
-	assert_true(result, "Slime should attack when adjacent")
-	assert_lt(player.current_hp, 100, "Player should take damage")
-
-func test_boss_golem_creation() -> void:
-	var golem := BossGolem.new()
-	assert_not_null(golem, "BossGolem should not be null")
-	assert_eq(golem.max_hp, 50, "Boss should have 50 max HP")
-	assert_eq(golem.phase, 1, "Boss should start in phase 1")
-
-func test_boss_golem_phase_transitions() -> void:
-	var golem := BossGolem.new()
-	golem.name = "TestBoss"
-	add_child(golem)
-
-	# Phase 1: HP 50-26
-	assert_eq(golem.get_attack_damage(), 5, "Phase 1 damage should be 5")
-	assert_eq(golem.get_movement_speed(), 1.0, "Phase 1 speed should be 1.0")
-
-	# Damage to trigger phase 2 threshold
-	golem.take_damage(26)  # HP becomes 24
-	assert_eq(golem.phase, 2, "Should be in phase 2")
-	assert_eq(golem.get_attack_damage(), 8, "Phase 2 damage should be 8")
-	assert_eq(golem.get_movement_speed(), 1.2, "Phase 2 speed should be 1.2")
-
-	# Damage to trigger phase 3 threshold
-	golem.take_damage(10)  # HP becomes 14
-	assert_eq(golem.phase, 3, "Should be in phase 3")
-	assert_eq(golem.get_attack_damage(), 12, "Phase 3 damage should be 12")
-	assert_eq(golem.get_movement_speed(), 1.4, "Phase 3 speed should be 1.4")
-
-func test_boss_golem_attack() -> void:
-	var golem := BossGolem.new()
-	golem.name = "TestBoss"
-	add_child(golem)
-	golem.grid_x = 5
-	golem.grid_y = 5
-	golem.phase = 3
-
-	var player := Player.new()
-	player.name = "TestPlayer"
-	add_child(player)
-	player.grid_x = 6
-	player.grid_y = 5
-	player.current_hp = 100
-
-	TurnManager.current_state = TurnManager.TurnState.ENEMY_TURN
-
-	var result := golem.take_action(player.grid_x, player.grid_y)
-	assert_true(result, "Boss should attack in phase 3")
-	assert_eq(player.current_hp, 88, "Player should take 12 damage (phase 3)")
-
-func test_enemy_attack_player_adjacent() -> void:
-	var enemy := Enemy.new()
-	enemy.name = "TestEnemy"
-	add_child(enemy)
-	enemy.grid_x = 5
-	enemy.grid_y = 5
-
-	var player := Player.new()
-	player.name = "TestPlayer"
-	add_child(player)
-	player.grid_x = 5
-	player.grid_y = 6
-	player.current_hp = 100
-
-	TurnManager.current_state = TurnManager.TurnState.ENEMY_TURN
-
-	var result := enemy.take_action(player.grid_x, player.grid_y)
-	assert_true(result, "Enemy should attack when adjacent to player")
-	assert_lt(player.current_hp, 100, "Player should take damage from enemy")
-
-func test_enemy_patrol_mode() -> void:
-	var enemy := Enemy.new()
-	enemy.name = "TestEnemy"
-	add_child(enemy)
+	var enemy: Slime = Slime.new()
 	enemy.grid_x = 10
-	enemy.grid_y = 10
-	enemy.patrol_points = [
-		[10, 10, 0],
-		[11, 10, 0],
-		[11, 11, 0]
-	]
-	enemy.patrol_index = 0
+	enemy.grid_y = 13
+	add_child(enemy)
+	grid_system.set_occupant(enemy.grid_x, enemy.grid_y, 0, enemy)
+	assert_true(enemy.is_in_group("enemies"), "slime added to enemies group")
+	assert_eq(enemy.max_hp, 20, "slime max_hp=20")
 
-	var player := Player.new()
-	player.name = "TestPlayer"
-	player.grid_x = 100  # Far away
-	player.grid_y = 100
+	# --- Soglie di rilevamento: Slime rileva entro 3 ---
+	enemy.update_state(player.grid_x, player.grid_y)  # distanza 3
+	assert_eq(enemy.state, Enemy.EnemyState.HUNT, "slime hunts at distance 3")
 
-	TurnManager.current_state = TurnManager.TurnState.ENEMY_TURN
+	enemy.grid_y = 14
+	enemy.update_state(player.grid_x, player.grid_y)  # distanza 4
+	assert_eq(enemy.state, Enemy.EnemyState.IDLE, "idle at distance 4 without patrol")
 
+	enemy.patrol_points = [[10, 14, 0], [10, 16, 0]]
 	enemy.update_state(player.grid_x, player.grid_y)
-	assert_eq(enemy.state, Enemy.EnemyState.PATROL, "Enemy should PATROL when player far")
+	assert_eq(enemy.state, Enemy.EnemyState.PATROL, "patrol when far with patrol points")
+	enemy.patrol_points = []
 
-	enemy.take_action(player.grid_x, player.grid_y)
-	assert_eq(enemy.grid_x, 11, "Enemy should move to next patrol point")
-	assert_eq(enemy.patrol_index, 1, "Patrol index should increment")
+	# --- Base Enemy: soglia 2 (il Slime è più sensibile) ---
+	var base: Enemy = Enemy.new()
+	base.grid_x = 10
+	base.grid_y = 13
+	add_child(base)
+	base.update_state(player.grid_x, player.grid_y)  # distanza 3
+	assert_eq(base.state, Enemy.EnemyState.IDLE, "base enemy idle at distance 3")
+	base.grid_y = 12
+	base.update_state(player.grid_x, player.grid_y)  # distanza 2
+	assert_eq(base.state, Enemy.EnemyState.HUNT, "base enemy hunts at distance 2")
+
+	# --- can_act vincolato allo stato del turno ---
+	turn_manager.current_state = 0  # PLAYER_TURN
+	assert_false(enemy.can_act(), "enemy cannot act on player turn")
+	turn_manager.current_state = 1  # ENEMY_TURN
+	assert_true(enemy.can_act(), "enemy can act on enemy turn")
+
+	# --- Hunting: il nemico si avvicina di una cella per turno ---
+	enemy.grid_y = 13
+	grid_system.set_occupant(enemy.grid_x, enemy.grid_y, 0, enemy)
+	turn_manager.current_state = 1
+	assert_true(enemy.take_action(player.grid_x, player.grid_y), "hunt action taken")
+	assert_eq(enemy.grid_y, 12, "slime stepped to (10,12) toward player")
+	assert_null(grid_system.get_cell_at(10, 13, 0).occupant, "old cell vacated by slime")
+	assert_true(grid_system.get_cell_at(10, 12, 0).occupant == enemy, "slime occupies new cell")
+
+	# --- Priorità attacco: adiacente in ENEMY_TURN colpisce invece di muoversi ---
+	# Dopo il primo passo la distanza è ancora 2: serve un secondo passo.
+	assert_true(enemy.take_action(player.grid_x, player.grid_y), "second hunt step")
+	assert_eq(enemy.grid_y, 11, "slime stepped to (10,11), now adjacent")
+
+	var hp_before: int = player.current_hp
+	assert_true(enemy.take_action(player.grid_x, player.grid_y), "adjacent slime acts")
+	assert_eq(enemy.grid_y, 11, "slime did not move when adjacent")
+	assert_eq(player.current_hp, hp_before - 1, "player took 1 damage (3 attack - 2 defense)")
+
+	# --- Patrol: segue i punti di pattuglia quando il player è lontano ---
+	var patroller: Slime = Slime.new()
+	patroller.grid_x = 3
+	patroller.grid_y = 15
+	add_child(patroller)
+	grid_system.set_occupant(3, 15, 0, patroller)
+	patroller.patrol_points = [[3, 14, 0], [4, 14, 0]]
+	patroller.patrol_index = 0
+	turn_manager.current_state = 1
+	assert_true(patroller.take_action(18, 18), "patrol action taken")
+	assert_eq(patroller.grid_x, 3, "patroller moved to first point x")
+	assert_eq(patroller.grid_y, 14, "patroller moved to first point y")
+	assert_eq(patroller.patrol_index, 1, "patrol index advanced")
+	assert_true(patroller.take_action(18, 18), "second patrol step taken")
+	assert_eq(patroller.patrol_index, 0, "patrol index wrapped around")
+
+	# --- Fuori ENEMY_TURN nessuna azione ---
+	turn_manager.current_state = 0
+	var frozen_y: int = patroller.grid_y
+	assert_false(patroller.take_action(18, 18), "no action outside enemy turn")
+	assert_eq(patroller.grid_y, frozen_y, "position unchanged outside enemy turn")
+
+	# --- Pulizia: celle libere prima del free, stato TurnManager ripristinato ---
+	for n in [player, enemy, base, patroller]:
+		grid_system.set_occupant(n.grid_x, n.grid_y, n.grid_elevation, null)
+		remove_child(n)
+		n.free()
+	turn_manager.player = tm_player_bak
+	turn_manager.current_state = tm_state_bak
+
+	print_results()

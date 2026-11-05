@@ -11,13 +11,15 @@ func _ready() -> void:
 
 func _on_body_entered(body: Node) -> void:
 	if body is Player:
-		var player := body as Player
+		var player: Player = body as Player
 
 		# Add to inventory
-		InventorySystem.add_item("healing_potion")
+		var inventory_system = get_node("/root/InventorySystem")
+		inventory_system.add_item("healing_potion")
 
 		# Consume 1 turn for pickup
-		TurnManager.consume_action()
+		var turn_manager = get_node("/root/TurnManager")
+		turn_manager.consume_action()
 
 		# Signal pickup (could be used for visual feedback)
 		pickuped.emit(player)

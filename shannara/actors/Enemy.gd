@@ -3,7 +3,7 @@
 # Basic AI with patrol points and hunt behavior
 
 class_name Enemy
-extends ActorController
+extends Node2D
 
 enum EnemyState { IDLE, PATROL, HUNT, ATTACK }
 
@@ -11,21 +11,36 @@ var state: int = EnemyState.IDLE
 var patrol_points: Array = []
 var patrol_index: int = 0
 
+# HP and position state
+var max_hp: int = 50
+var current_hp: int = 50
+var grid_x: int = 10
+var grid_y: int = 10
+var grid_elevation: int = 0
+
 func _ready() -> void:
 	add_to_group("enemies")
 
-func _init() -> void:
-	max_hp = 50
-	current_hp = 50
-	grid_x = 10
-	grid_y = 10
-	grid_elevation = 0
+func is_alive() -> bool:
+	return current_hp > 0
+
+func take_damage(amount: int) -> void:
+	current_hp = max(0, current_hp - abs(amount))
+
+func heal(amount: int) -> void:
+	current_hp = min(max_hp, current_hp + abs(amount))
+
+func is_connected_to_grid() -> bool:
+	return true
 
 func can_act() -> bool:
-	return is_alive() and TurnManager.is_enemy_turn()
+	var tm = get_node("/root/TurnManager")
+	if tm == null:
+		return false
+	return is_alive() and tm.current_state == 1  # ENEMY_TURN = 1
 
 func update_state(player_x: int, player_y: int) -> void:
-	var distance := abs(grid_x - player_x) + abs(grid_y - player_y)
+	var distance: int = abs(grid_x - player_x) + abs(grid_y - player_y)
 	if distance <= 2:
 		state = EnemyState.HUNT
 	elif patrol_points.size() > 0:
@@ -37,17 +52,15 @@ func take_action(target_x: int, target_y: int) -> bool:
 	"""Execute enemy action (move or attack). Returns true if action taken."""
 	if not can_act():
 		return false
-
 	# Update state based on player position
 	update_state(target_x, target_y)
-
 	# Check if player is adjacent - attack first
-	var player := TurnManager.player
+	var tm = get_node("/root/TurnManager")
+	var player = tm.player
 	if player != null and player.is_alive():
-		var distance := abs(grid_x - player.grid_x) + abs(grid_y - player.grid_y)
+		var distance = abs(grid_x - player.grid_x) + abs(grid_y - player.grid_y)
 		if distance <= 1 and grid_elevation == player.grid_elevation:
 			return _attack_player()
-
 	if state == EnemyState.HUNT:
 		return _hunt_action(target_x, target_y)
 	elif state == EnemyState.PATROL:
@@ -56,50 +69,71 @@ func take_action(target_x: int, target_y: int) -> bool:
 
 func _attack_player() -> bool:
 	"""Attack the player if adjacent."""
-	var player := TurnManager.player
+	var tm = get_node("/root/TurnManager")
+	var player = tm.player
 	if player == null or not player.is_alive():
 		return false
-
-	var result := CombatResolver.resolve_attack(self, player)
+	var cr = get_node("/root/CombatResolver")
+	var result = cr.resolve_attack(self, player)
 	if result.success:
-		TurnManager.consume_action()
+		tm.consume_action()
 		return true
 	return false
 
 func _hunt_action(target_x: int, target_y: int) -> bool:
-	"""Move toward player position using A* pathfinding."""
-	var path := GridSystem.find_path(grid_x, grid_y, grid_elevation, target_x, target_y, grid_elevation)
+	"""Move toward the player, one step along the shortest legal path."""
+	var grid_system = get_node("/root/GridSystem")
+	var path: Array = grid_system.find_path(grid_x, grid_y, grid_elevation, target_x, target_y, grid_elevation)
+	if path.size() <= 1:
+		# La cella del player è occupata e quindi non calpestabile: si punta
+		# alla cella libera più vicina adiacente al target.
+		path = _shortest_path_adjacent_to(grid_system, target_x, target_y)
 	if path.size() > 1:
-		var next_pos := path[1]
-		var success := _attempt_move(next_pos[0], next_pos[1], next_pos[2])
+		var next_pos = path[1]
+		var success = _attempt_move(next_pos[0], next_pos[1], next_pos[2])
 		if success:
-			TurnManager.consume_action()
+			var tm = get_node("/root/TurnManager")
+			tm.consume_action()
 			return true
 	return false
+
+# Cammino minimo verso una cella adiacente al target (il player occupa la
+# propria cella, che find_path scarta come destinazione).
+func _shortest_path_adjacent_to(gs, target_x: int, target_y: int) -> Array:
+	var best: Array = []
+	var dirs: Array = [Vector2i(0, -1), Vector2i(0, 1), Vector2i(-1, 0), Vector2i(1, 0)]
+	for d in dirs:
+		var candidate: Array = gs.find_path(grid_x, grid_y, grid_elevation, target_x + d.x, target_y + d.y, grid_elevation)
+		if candidate.size() > 1 and (best.is_empty() or candidate.size() < best.size()):
+			best = candidate
+	return best
 
 func _patrol_action() -> bool:
 	"""Move along patrol route."""
 	if patrol_points.size() == 0:
 		return false
-
-	var target := patrol_points[patrol_index]
-	var success := _attempt_move(target[0], target[1], target[2])
+	var target = patrol_points[patrol_index]
+	var success = _attempt_move(target[0], target[1], target[2])
 	if success:
+		var tm = get_node("/root/TurnManager")
+		tm.consume_action()
 		patrol_index = (patrol_index + 1) % patrol_points.size()
-		TurnManager.consume_action()
 		return true
 	return false
 
 func _attempt_move(target_x: int, target_y: int, target_elev: int) -> bool:
 	"""Internal validation and execution of enemy movement."""
-	if target_x < 0 or target_y < 0 or target_x >= GridSystem.GRID_WIDTH or target_y >= GridSystem.GRID_HEIGHT:
+	var grid_system = get_node("/root/GridSystem")
+	if target_x < 0 or target_y < 0 or target_x >= grid_system.GRID_WIDTH or target_y >= grid_system.GRID_HEIGHT:
 		return false
-	if not GridSystem.is_cell_walkable(target_x, target_y, target_elev):
+	if not grid_system.is_cell_walkable(target_x, target_y, target_elev):
 		return false
-
-	GridSystem.set_occupant(grid_x, grid_y, grid_elevation, null)
+	grid_system.set_occupant(grid_x, grid_y, grid_elevation, null)
 	grid_x = target_x
 	grid_y = target_y
 	grid_elevation = target_elev
-	GridSystem.set_occupant(target_x, target_y, target_elev, self)
+	grid_system.set_occupant(target_x, target_y, target_elev, self)
 	return true
+
+func get_attack_damage() -> int:
+	return 3  # Base slime attack damage

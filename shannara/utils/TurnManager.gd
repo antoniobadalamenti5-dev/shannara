@@ -1,10 +1,9 @@
 # TurnManager singleton with deterministic turn system
 # Handles Player -> Enemy -> Player cycle, 1 action = 1 turn
 
-class_name TurnManager
 extends Node
 
-enum TurnState { PLAYER_TURN, ENEMY_TURN }
+enum TurnState { PLAYER_TURN = 0, ENEMY_TURN = 1 }
 
 var current_state: int = TurnState.PLAYER_TURN
 var turn_count: int = 0
@@ -17,8 +16,14 @@ signal action_consumed
 signal enemy_turn_complete
 
 func _ready() -> void:
-	grid_system = get_tree().get_root().find_node("GridSystem", true, false)
-	player = get_tree().get_root().find_node("Player", true, false)
+	grid_system = get_node_or_null("/root/GridSystem")
+	var players = get_tree().get_nodes_in_group("players")
+	if players.size() > 0:
+		player = players[0]
+
+# Chiamato dal Player quando entra nell'albero: registro il riferimento.
+func register_player(p: Node) -> void:
+	player = p
 
 func start_player_turn() -> void:
 	current_state = TurnState.PLAYER_TURN
@@ -36,8 +41,8 @@ func _process_enemy_turn() -> void:
 		end_turn()
 		return
 
-	var enemies := get_tree().get_nodes_in_group("enemies")
-	var enemies_array := enemies.duplicate()  # Avoid modification during iteration
+	var enemies: Array = get_tree().get_nodes_in_group("enemies")
+	var enemies_array: Array = enemies.duplicate()  # Avoid modification during iteration
 
 	for enemy in enemies_array:
 		if enemy != null and enemy.is_alive() == true and enemy.can_act() == true:

@@ -1,8 +1,14 @@
 # ActorController base class for player and enemy entities
 # Handles HP, position, movement, and turn-based actions
 
-class_name ActorController
 extends Node2D
+
+# Reference to singletons (lazily resolved via tree)
+func _turn_manager() -> Node:
+	return get_node_or_null("/root/TurnManager")
+
+func _grid_system() -> Node:
+	return get_node_or_null("/root/GridSystem")
 
 @export var max_hp: int = 100
 var current_hp: int = max_hp
@@ -29,16 +35,20 @@ func is_alive() -> bool:
 	return current_hp > 0
 
 func can_act() -> bool:
-	if TurnManager == null:
+	var tm = _turn_manager()
+	if tm == null:
 		return false
-	return TurnManager.current_state == TurnManager.TurnState.PLAYER_TURN
+	return is_alive() and tm.current_state == 0  # PLAYER_TURN = 0
 
 func move_to(x: int, y: int, elevation: int) -> bool:
-	if GridSystem.is_cell_walkable(x, y, elevation):
-		GridSystem.set_occupant(grid_x, grid_y, grid_elevation, null)
+	var gs = _grid_system()
+	if gs == null:
+		return false
+	if gs.is_cell_walkable(x, y, elevation):
+		gs.set_occupant(grid_x, grid_y, grid_elevation, null)
 		grid_x = x
 		grid_y = y
 		grid_elevation = elevation
-		GridSystem.set_occupant(x, y, elevation, self)
+		gs.set_occupant(x, y, elevation, self)
 		return true
 	return false

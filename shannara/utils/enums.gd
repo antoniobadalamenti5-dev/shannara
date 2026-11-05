@@ -3,6 +3,10 @@
 # 0 = piano (floor)
 # 1 = altura (height/bridge)
 
-extends Resource
+class_name TerrainType
 
-enum TerrainType { FLOOR, BRIDGE, SPIKE, WALL }
+# Terrain type constants (values must match GridSystem usage)
+const FLOOR: int = 0
+const BRIDGE: int = 1
+const SPIKE: int = 2
+const WALL: int = 3

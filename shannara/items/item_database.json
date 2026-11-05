@@ -1,16 +1,28 @@
 {
-  "items": {
-    "healing_potion": {
-      "name": "Pozione Curativa",
-      "type": "consumable",
-      "hp_restore": 15,
-      "description": "Ripristina 15 PV"
-    },
-    "wooden_sword": {
-      "name": "Spada di Legno",
-      "type": "weapon",
-      "atk_bonus": 3,
-      "description": "+3 Attacco"
+    "items": {
+        "healing_potion": {
+            "name": "Pozione Curativa",
+            "type": "consumable",
+            "hp_restore": 20,
+            "description": "Ripristina 20 punti vita"
+        },
+        "mana_potion": {
+            "name": "Pozione Mana",
+            "type": "consumable",
+            "mana_restore": 15,
+            "description": "Ripristina 15 punti mana"
+        },
+        "iron_sword": {
+            "name": "Spada di Ferro",
+            "type": "weapon",
+            "atk_bonus": 5,
+            "description": "Una spada basica"
+        },
+        "steel_sword": {
+            "name": "Spada di Acciaio",
+            "type": "weapon",
+            "atk_bonus": 10,
+            "description": "Una spada raffinata"
+        }
     }
-  }
 }

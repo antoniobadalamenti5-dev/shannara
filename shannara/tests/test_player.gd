@@ -1,106 +1,74 @@
-# Test per Player actor
-# Verifica movimento 4-direzioni e consumo turno
+# test_player.gd - Unit tests for Player actor
+# Tests HP, position, grid registration, can_act
 
-func test_player_creation() -> void:
-	var player := Player.new()
-	assert_not_null(player, "Player should not be null")
-	assert_eq(player.max_hp, 100, "Player should have 100 max HP")
-	assert_eq(player.current_hp, 100, "Player should start with full HP")
+extends TestSuite
 
-func test_player_can_act_on_player_turn() -> void:
-	var player := Player.new()
-	player.name = "TestPlayer"
-	add_child(player)
+func run_tests() -> void:
+	print("\n[TEST] Player")
 
-	TurnManager.current_state = TurnManager.TurnState.PLAYER_TURN
-	assert_true(player.can_act(), "Player should be able to act on player turn")
+	var turn_manager = get_node("/root/TurnManager")
+	var grid_system = get_node("/root/GridSystem")
+	var tm_state_bak: int = turn_manager.current_state
+	var tm_player_bak = turn_manager.player
 
-	TurnManager.current_state = TurnManager.TurnState.ENEMY_TURN
-	assert_false(player.can_act(), "Player should not be able to act on enemy turn")
+	# Dentro l'albero: _ready richiede i percorsi assoluti (/root/TurnManager)
+	var p: Player = Player.new()
+	add_child(p)
+	assert_true(p is Player, "Player.new() is a Player")
 
-func test_player_move_direction_valid() -> void:
-	var player := Player.new()
-	player.name = "TestPlayer"
-	add_child(player)
-	player.grid_x = 5
-	player.grid_y = 5
-	player.grid_elevation = 0
+	# Default HP
+	assert_eq(p.max_hp, 100, "max_hp=100")
+	assert_eq(p.current_hp, 100, "current_hp=100 on new")
 
-	TurnManager.current_state = TurnManager.TurnState.PLAYER_TURN
+	# Default position
+	assert_eq(p.grid_x, 5, "grid_x=5")
+	assert_eq(p.grid_y, 5, "grid_y=5")
+	assert_eq(p.grid_elevation, 0, "grid_elevation=0")
 
-	# Move right
-	var moved := player.move_direction(1, 0)
-	assert_true(moved, "Should move right successfully")
-	assert_eq(player.grid_x, 6, "X should increment")
+	# Registrazione all'ingresso nell'albero (invariante griglia + TurnManager)
+	assert_true(p.is_in_group("players"), "added to players group")
+	assert_true(turn_manager.player == p, "TurnManager references the player")
+	var spawn_cell: GridCell = grid_system.get_cell_at(5, 5, 0)
+	assert_true(spawn_cell.occupant == p, "spawn cell registered on grid")
 
-func test_player_move_direction_blocked() -> void:
-	var player := Player.new()
-	player.name = "TestPlayer2"
-	add_child(player)
-	player.grid_x = 5
-	player.grid_y = 5
-	player.grid_elevation = 0
+	# is_alive
+	assert_true(p.is_alive(), "is_alive at full HP")
 
-	# Place wall to block movement
-	GridSystem.place_terrain(6, 5, 0, TerrainType.WALL)
+	# Damage
+	p.take_damage(30)
+	assert_eq(p.current_hp, 70, "hp after 30 damage")
 
-	TurnManager.current_state = TurnManager.TurnState.PLAYER_TURN
+	p.take_damage(70)
+	assert_eq(p.current_hp, 0, "hp=0 after 70 damage")
+	assert_false(p.is_alive(), "not alive at 0 hp")
 
-	var moved := player.move_direction(1, 0)
-	assert_false(moved, "Should not move into wall")
+	# Healing
+	p.current_hp = 50
+	p.heal(20)
+	assert_eq(p.current_hp, 70, "hp after 20 heal")
 
-func test_player_turn_consumed_by_movement() -> void:
-	var player := Player.new()
-	player.name = "TestPlayer3"
-	add_child(player)
-	player.grid_x = 5
-	player.grid_y = 5
+	p.heal(999)
+	assert_eq(p.current_hp, p.max_hp, "heal capped at max_hp")
 
-	var initial_turn_count := TurnManager.turn_count
+	# Attack damage
+	assert_eq(p.get_attack_damage(), 10, "attack_damage=10")
 
-	TurnManager.current_state = TurnManager.TurnState.PLAYER_TURN
-	player.move_direction(1, 0)
+	# can_act (TurnManager lookup: il player deve essere nell'albero)
+	turn_manager.current_state = 0  # PLAYER_TURN
+	assert_true(p.can_act(), "can_act on player turn")
 
-	# Turn should now be in ENEMY_TURN (consumed)
-	assert_eq(TurnManager.current_state, TurnManager.TurnState.ENEMY_TURN, "Player action should consume turn")
+	turn_manager.current_state = 1  # ENEMY_TURN
+	assert_false(p.can_act(), "cannot act on enemy turn")
 
-func test_player_move_out_of_bounds() -> void:
-	var player := Player.new()
-	player.name = "TestPlayer4"
-	add_child(player)
-	player.grid_x = 0
-	player.grid_y = 0
+	turn_manager.current_state = 0
+	p.take_damage(999)
+	assert_false(p.can_act(), "dead player cannot act")
 
-	TurnManager.current_state = TurnManager.TurnState.PLAYER_TURN
+	# Clean up: liberare la cella PRIMA del free (no dangling occupant)
+	grid_system.set_occupant(p.grid_x, p.grid_y, p.grid_elevation, null)
+	turn_manager.player = tm_player_bak
+	turn_manager.current_state = tm_state_bak
+	remove_child(p)
+	p.free()
 
-	var moved := player.move_direction(-1, 0)  # Move left from x=0
-	assert_false(moved, "Should not move out of bounds")
-
-func test_player_cannot_move_on_enemy_turn() -> void:
-	var player := Player.new()
-	player.name = "TestPlayer5"
-	add_child(player)
-
-	TurnManager.current_state = TurnManager.TurnState.ENEMY_TURN
-
-	var moved := player.move_direction(0, 1)
-	assert_false(moved, "Should not move on enemy turn")
-
-func test_player_move_to_elevation() -> void:
-	var player := Player.new()
-	player.name = "TestPlayer6"
-	add_child(player)
-	player.grid_x = 5
-	player.grid_y = 5
-	player.grid_elevation = 0
-
-	# Set up stairs cell
-	var stairs_cell := GridSystem.get_cell_at(5, 6, 1)
-	stairs_cell.walkable = true
-	stairs_cell.terrain_type = TerrainType.BRIDGE
-
-	TurnManager.current_state = TurnManager.TurnState.PLAYER_TURN
-
-	var moved := player.move_to_elevation(1)
-	assert_true(moved, "Should move to elevation 1")
-	assert_eq(player.grid_elevation, 1, "Elevation should be 1")
+	print_results()

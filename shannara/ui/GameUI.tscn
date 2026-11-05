@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource path="res://ui/GameUI.gd" type="Script" id=1]
+[ext_resource path="res://icon.svg" type="Texture2D" id=2]
+
+[node name="GameUI" type="CanvasLayer"]
+script = ExtResource( 1 )
+[children]
+child node id=3: HPLabel (Label, name="HPLabel")
+child node id=4: MaxHPLabel (Label, name="MaxHPLabel")
+child node id=5: TurnLabel (Label, name="TurnLabel")
+child node id=6: MessageLabel (Label, name="MessageLabel")
+child node id=7: CombatLog (RichTextLabel, name="CombatLog")

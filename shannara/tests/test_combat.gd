@@ -1,72 +1,86 @@
-# Test per CombatResolver
-# Verifica formule danno deterministiche
+# test_combat.gd - Unit tests for CombatResolver
+# Tests damage calculation, attack resolution, adjacency checks
 
-func test_calculate_damage_basic() -> void:
-	var damage := CombatResolver.calculate_damage(10, 5)
-	assert_eq(damage, 5, "10 power - 5 defense = 5 damage")
+extends TestSuite
 
-func test_calculate_damage_minimum_one() -> void:
-	var damage := CombatResolver.calculate_damage(3, 10)
-	assert_eq(damage, 1, "Damage should have minimum of 1")
+func run_tests() -> void:
+	print("\n[TEST] CombatResolver")
 
-func test_calculate_damage_with_weapon_bonus() -> void:
-	var damage := CombatResolver.calculate_damage(10, 5, 3)
-	assert_eq(damage, 8, "(10 - 5) + 3 = 8 damage")
+	var combat_resolver = get_node("/root/CombatResolver")
+	var grid_system = get_node("/root/GridSystem")
 
-func test_calculate_damage_negative_result_clamped() -> void:
-	var damage := CombatResolver.calculate_damage(5, 15)
-	assert_eq(damage, 1, "Negative damage should clamp to minimum 1")
+	# --- calculate_damage: formula base ---
+	var damage: int = combat_resolver.calculate_damage(10, 5)
+	assert_eq(damage, 5, "10-5=5")
 
-func test_resolve_attack_adjacent() -> void:
-	var attacker := ActorController.new()
-	attacker.grid_x = 5
-	attacker.grid_y = 5
-	attacker.current_hp = 100
+	damage = combat_resolver.calculate_damage(20, 8)
+	assert_eq(damage, 12, "20-8=12")
 
-	var target := ActorController.new()
-	target.grid_x = 6
-	target.grid_y = 5
-	target.current_hp = 50
+	damage = combat_resolver.calculate_damage(5, 10)
+	assert_eq(damage, 1, "negative clamped to MIN_DAMAGE=1")
 
-	var result := CombatResolver.resolve_attack(attacker, target)
-	assert_true(result.success, "Attack should succeed on adjacent target")
-	assert_gt(result.damage, 0, "Damage should be positive")
-	assert_eq(target.current_hp, 50 - result.damage, "Target HP should decrease")
+	damage = combat_resolver.calculate_damage(100, 10)
+	assert_eq(damage, 90, "100-10=90")
 
-func test_resolve_attack_not_adjacent() -> void:
-	var attacker := ActorController.new()
-	attacker.grid_x = 5
-	attacker.grid_y = 5
+	# --- calculate_damage: bonus arma e cap ---
+	damage = combat_resolver.calculate_damage(10, 5, 3)
+	assert_eq(damage, 8, "(10-5)+3=8")
 
-	var target := ActorController.new()
-	target.grid_x = 10  # Too far
-	target.grid_y = 10
+	damage = combat_resolver.calculate_damage(10, 5, 0)
+	assert_eq(damage, 5, "no weapon bonus")
 
-	var result := CombatResolver.resolve_attack(attacker, target)
-	assert_false(result.success, "Attack should fail on non-adjacent target")
-	assert_eq(result.damage, 0, "No damage should be dealt")
+	damage = combat_resolver.calculate_damage(10, 5, 999999)
+	assert_eq(damage, combat_resolver.MAX_DAMAGE, "damage capped at MAX_DAMAGE")
 
-func test_resolve_attack_dead_target() -> void:
-	var attacker := ActorController.new()
-	attacker.grid_x = 5
-	attacker.grid_y = 5
+	# --- resolve_attack: attacco adiacente tra attori reali ---
+	var player: Player = Player.new()
+	player.grid_x = 5
+	player.grid_y = 5
 
-	var target := ActorController.new()
-	target.grid_x = 6
-	target.grid_y = 5
-	target.current_hp = 0  # Already dead
+	var enemy: Enemy = Enemy.new()
+	enemy.grid_x = 6
+	enemy.grid_y = 5
 
-	var result := CombatResolver.resolve_attack(attacker, target)
-	assert_false(result.success, "Should not attack dead target")
-	assert_true(result.target_killed, "target_killed should be true for dead target")
+	grid_system.set_occupant(5, 5, 0, player)
+	grid_system.set_occupant(6, 5, 0, enemy)
 
-func test_damage_formula_deterministic() -> void:
-	# Same inputs should always produce same output
-	for i in range(10):
-		var damage1 := CombatResolver.calculate_damage(15, 7, 2)
-		var damage2 := CombatResolver.calculate_damage(15, 7, 2)
-		assert_eq(damage1, damage2, "Damage should be deterministic")
+	var result: Dictionary = combat_resolver.resolve_attack(player, enemy)
+	assert_true(result.success, "adjacent attack succeeds")
+	assert_eq(result.damage, 8, "damage=10-2=8 (base defense=2)")
+	assert_eq(enemy.current_hp, 42, "enemy hp 50-8=42 after hit")
+	assert_false(result.target_killed, "target survives first hit")
+	assert_true(enemy.is_alive(), "enemy alive after hit")
 
-func test_max_damage_cap() -> void:
-	var damage := CombatResolver.calculate_damage(1000000, 0)
-	assert_eq(damage, 999999, "Damage should have max cap of 999999")
+	# --- Colpo finale: HP residui -> morte e rilascio della cella ---
+	enemy.current_hp = 5
+	result = combat_resolver.resolve_attack(player, enemy)
+	assert_true(result.success, "finishing attack succeeds")
+	assert_true(result.target_killed, "target_killed=true")
+	assert_eq(enemy.current_hp, 0, "enemy hp=0 after kill")
+	assert_false(enemy.is_alive(), "enemy dead after kill")
+	assert_null(grid_system.get_cell_at(6, 5, 0).occupant, "dead enemy cleared from grid")
+
+	# --- Attacco non adiacente respinto ---
+	var far_enemy: Enemy = Enemy.new()
+	far_enemy.grid_x = 10
+	far_enemy.grid_y = 10
+	result = combat_resolver.resolve_attack(player, far_enemy)
+	assert_false(result.success, "far attack fails")
+	assert_eq(result.damage, 0, "no damage on failed attack")
+
+	# --- Target già morto: nessuna risoluzione ---
+	result = combat_resolver.resolve_attack(player, enemy)
+	assert_false(result.success, "attack on a corpse fails")
+	assert_true(result.target_killed, "corpse reported as killed")
+
+	# --- Target nullo ---
+	result = combat_resolver.resolve_attack(player, null)
+	assert_false(result.success, "null target fails safely")
+
+	# --- Pulizia: celle libere, poi free (nod fuori albero) ---
+	grid_system.set_occupant(5, 5, 0, null)
+	player.free()
+	enemy.free()
+	far_enemy.free()
+
+	print_results()

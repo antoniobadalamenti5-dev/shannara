@@ -25,7 +25,7 @@ func _ready() -> void:
 
 func _update_phase() -> void:
 	"""Check HP and transition phases."""
-	var new_phase := 1
+	var new_phase: int = 1
 	if current_hp <= phase_thresholds[1]:
 		new_phase = 3
 	elif current_hp <= phase_thresholds[0]:
@@ -63,16 +63,17 @@ func take_damage(amount: int) -> void:
 
 func _attack_player() -> bool:
 	"""Override attack to use phase-based damage."""
-	var player := TurnManager.player
+	var turn_manager = get_node("/root/TurnManager")
+	var player = turn_manager.player
 	if player == null or not player.is_alive():
 		return false
 
 	# Check adjacency
-	var distance := abs(grid_x - player.grid_x) + abs(grid_y - player.grid_y)
+	var distance: int = abs(grid_x - player.grid_x) + abs(grid_y - player.grid_y)
 	if distance <= 1 and grid_elevation == player.grid_elevation:
-		var damage := get_attack_damage()
+		var damage: int = get_attack_damage()
 		player.take_damage(damage)
-		TurnManager.consume_action()
+		turn_manager.consume_action()
 		return true
 	return false
 
@@ -84,9 +85,10 @@ func take_action(target_x: int, target_y: int) -> bool:
 	update_state(target_x, target_y)
 
 	# Check if player is adjacent - attack first
-	var player := TurnManager.player
+	var turn_manager = get_node("/root/TurnManager")
+	var player = turn_manager.player
 	if player != null and player.is_alive():
-		var distance := abs(grid_x - player.grid_x) + abs(grid_y - player.grid_y)
+		var distance: int = abs(grid_x - player.grid_x) + abs(grid_y - player.grid_y)
 		if distance <= 1 and grid_elevation == player.grid_elevation:
 			return _attack_player()
 
@@ -94,15 +96,4 @@ func take_action(target_x: int, target_y: int) -> bool:
 		return _hunt_action(target_x, target_y)
 	elif state == EnemyState.PATROL:
 		return _patrol_action()
-	return false
-
-func _hunt_action(target_x: int, target_y: int) -> bool:
-	"""Move toward player using A* pathfinding. Phase 3 attacks every turn."""
-	var path := GridSystem.find_path(grid_x, grid_y, grid_elevation, target_x, target_y, grid_elevation)
-	if path.size() > 1:
-		var next_pos := path[1]
-		var success := _attempt_move(next_pos[0], next_pos[1], next_pos[2])
-		if success:
-			TurnManager.consume_action()
-			return true
 	return false

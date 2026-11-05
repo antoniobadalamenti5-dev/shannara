@@ -33,12 +33,39 @@ Solo il completamento di ogni fase sbloga la successiva. Niente parallelismo tra
 
 ## Milestone
 
-- **M1** (Fase 2): Primo movimento giocatore confermato su griglia
-- **M2** (Fase 3): Primo turno completo giocatore→nemico concluso
-- **M3** (Fase 4): Primo attacco nemico inflitto confermato
-- **M4** (Fase 5): Oggetto curativo pickup funzionante
-- **M5** (Fase 7): Vertical slice "1 mappa → fine" giocabile dal nulla
+- **M1** (Fase 2): Primo movimento giocatore confermato su griglia ✅
+- **M2** (Fase 3): Primo turno completo giocatore→nemico concluso ✅
+- **M3** (Fase 4): Primo attacco nemico inflitto confermato ✅
+- **M4** (Fase 5): Oggetto curativo pickup funzionante ✅
+- **M5** (Fase 7): Vertical slice "1 mappa → fine" giocabile dal nulla ✅ **COMPLETATO**
 
 ## Weekly Track
 
 Ogni settimana: check ore accumulate, eventuali ridimensionamenti scope, report findings.
+
+## Fase 7 Completion
+
+**Fine Fase 7**: 2026-11-05
+
+**Sistema completati:**
+- GameManager: Orchestratore principale del gioco
+- InputManager: Gestione input tastiera (freccette, A, I, SPAZIO, ESC)
+- GameUI: Interfaccia utente con HP display e turn counter
+- CombatResolver: Aggiornato con signal attack_resolved e supporto get_attack_damage
+
+**Test Suite totale: 14 file**
+- test_grid_cell.gd
+- test_grid_system.gd
+- test_turn_manager.gd
+- test_player.gd
+- test_combat.gd
+- test_combat_flow.gd
+- test_enemy_ai.gd
+- test_inventory.gd
+- test_biome.gd
+- test_gameplay.gd (nuovo)
+- test_game_manager.gd (nuovo)
+- test_input_manager.gd (nuovo)
+- test_setup.gd
+
+**Stato Progetto**: ✅ **COMPLETATO** - Dungeon Crawler RPG con vertical slice giocabile

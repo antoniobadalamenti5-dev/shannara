@@ -1,49 +1,59 @@
-# Test per GridCell e TerrainType
-# Verifica creazione, tipi terreno e valori elevazione
+# test_grid_cell.gd - Unit tests for GridCell resource
+# Tests x, y, elevation, walkable, occupant, terrain_type properties
 
-func test_grid_cell_creation() -> void:
-	var cell := GridCell.new()
-	assert_not_null(cell, "GridCell should not be null")
-	assert_eq(cell.x, 0, "Default x should be 0")
-	assert_eq(cell.y, 0, "Default y should be 0")
-	assert_eq(cell.elevation, 0, "Default elevation should be 0")
-	assert_eq(cell.walkable, true, "Default walkable should be true")
-	assert_is(cell.occupant, Null, "Default occupant should be null")
+extends TestSuite
 
-func test_terrain_type_enum_values() -> void:
-	assert_eq(TerrainType.FLOOR, 0, "FLOOR should equal 0")
-	assert_eq(TerrainType.BRIDGE, 1, "BRIDGE should equal 1")
-	assert_eq(TerrainType.SPIKE, 2, "SPIKE should equal 2")
-	assert_eq(TerrainType.WALL, 3, "WALL should equal 3")
+func run_tests() -> void:
+	print("\n[TEST] GridCell")
 
-func test_elevation_clamp() -> void:
-	var cell := GridCell.new()
-	# Test elevation clamping within valid range
-	cell.elevation = -1  # fossato
-	assert_eq(cell.elevation, -1, "Elevation -1 should be valid")
-	cell.elevation = 0   # piano
-	assert_eq(cell.elevation, 0, "Elevation 0 should be valid")
-	cell.elevation = 1   # altezza
-	assert_eq(cell.elevation, 1, "Elevation 1 should be valid")
+	# Test instantiation
+	var cell: GridCell = GridCell.new()
+	# Per le sottoclassi di Resource, get_class() restituisce la classe base
+	# Usare 'is' per verificare il tipo runtime
+	assert_true(cell is GridCell, "GridCell.new() is GridCell")
 
-func test_grid_cell_factory() -> void:
-	var cell1 := GridCell.new().grid_cell_factory(5, 10, 0)
-	assert_eq(cell1.x, 5, "Factory should set x")
-	assert_eq(cell1.y, 10, "Factory should set y")
-	assert_eq(cell1.elevation, 0, "Factory should set elevation")
+	# Test default values
+	assert_eq(cell.x, 0, "default x=0")
+	assert_eq(cell.y, 0, "default y=0")
+	assert_eq(cell.elevation, 0, "default elevation=0")
+	assert_true(cell.walkable, "default walkable=true")
+	assert_null(cell.occupant, "default occupant=null")
+	assert_eq(cell.terrain_type, 0, "default terrain_type=FLOOR")
 
-	var cell2 := GridCell.new().grid_cell_factory(3, 7, 1)
-	assert_eq(cell2.x, 3)
-	assert_eq(cell2.y, 7)
-	assert_eq(cell2.elevation, 1, "Factory should set elevation to 1")
+	# Test x, y assignment
+	cell.x = 5
+	cell.y = 10
+	assert_eq(cell.x, 5, "x=5")
+	assert_eq(cell.y, 10, "y=10")
 
-	var cell3 := GridCell.new().grid_cell_factory(3, 7, 5)
-	assert_eq(cell3.elevation, 1, "Factory should clamp elevation to 1")
+	# Test elevation assignment
+	cell.elevation = 1
+	assert_eq(cell.elevation, 1, "elevation=1")
 
-func test_terrain_type_modification() -> void:
-	var cell := GridCell.new()
-	cell.terrain_type = TerrainType.WALL
-	assert_eq(cell.terrain_type, TerrainType.WALL, "Should be able to set terrain type")
+	cell.elevation = -1
+	assert_eq(cell.elevation, -1, "elevation=-1")
 
-	cell.terrain_type = TerrainType.SPIKE
-	assert_eq(cell.terrain_type, TerrainType.SPIKE, "Should update terrain type")
+	# Test elevation clamp via factory function
+	var factory_cell: GridCell = GridCell.new().grid_cell_factory(0, 0, 5)
+	assert_eq(factory_cell.elevation, 1, "factory clamps elevation <= 1")
+
+	factory_cell = GridCell.new().grid_cell_factory(0, 0, -5)
+	assert_eq(factory_cell.elevation, -1, "factory clamps elevation >= -1")
+
+	# Test walkable toggle
+	cell.walkable = false
+	assert_false(cell.walkable, "walkable=false")
+
+	cell.walkable = true
+	assert_true(cell.walkable, "walkable=true")
+
+	# Test occupant assignment
+	var mock_occupant: Node = Node.new()
+	mock_occupant.name = "TestOccupant"
+	cell.occupant = mock_occupant
+	assert_true(cell.occupant is Node, "occupant is Node")
+	assert_eq(cell.occupant.name, "TestOccupant", "occupant name")
+
+	mock_occupant.queue_free()
+
+	print_results()

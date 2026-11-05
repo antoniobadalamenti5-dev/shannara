@@ -16,7 +16,7 @@ func get_attack_damage() -> int:
 
 func update_state(player_x: int, player_y: int) -> void:
 	"""Slime detects player within distance 3 (slightly less than base Enemy)."""
-	var distance := abs(grid_x - player_x) + abs(grid_y - player_y)
+	var distance: int = abs(grid_x - player_x) + abs(grid_y - player_y)
 	if distance <= 3:
 		state = EnemyState.HUNT
 	elif patrol_points.size() > 0:
@@ -32,9 +32,10 @@ func take_action(target_x: int, target_y: int) -> bool:
 	update_state(target_x, target_y)
 
 	# Attack if adjacent to player
-	var player := TurnManager.player
+	var turn_manager = get_node("/root/TurnManager")
+	var player = turn_manager.player
 	if player != null and player.is_alive():
-		var distance := abs(grid_x - player.grid_x) + abs(grid_y - player.grid_y)
+		var distance: int = abs(grid_x - player.grid_x) + abs(grid_y - player.grid_y)
 		if distance <= 1 and grid_elevation == player.grid_elevation:
 			return _attack_player()
 
@@ -46,12 +47,14 @@ func take_action(target_x: int, target_y: int) -> bool:
 
 func _attack_player() -> bool:
 	"""Slime attacks adjacent player."""
-	var player := TurnManager.player
+	var turn_manager = get_node("/root/TurnManager")
+	var player = turn_manager.player
 	if player == null or not player.is_alive():
 		return false
 
-	var result := CombatResolver.resolve_attack(self, player)
+	var combat_resolver = get_node("/root/CombatResolver")
+	var result = combat_resolver.resolve_attack(self, player)
 	if result.success:
-		TurnManager.consume_action()
+		turn_manager.consume_action()
 		return true
 	return false

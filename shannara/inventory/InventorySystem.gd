@@ -1,6 +1,5 @@
 # Inventory system singleton for player item management
 
-class_name InventorySystem
 extends Node
 
 var active_items: Dictionary = {}
@@ -38,23 +37,24 @@ func use_item(item_id: String) -> bool:
 	if not has_item(item_id, 1):
 		return false
 
-	var item := ItemDatabase.get_item(item_id)
-	var item_type := item.get("type", "")
+	var item_database = get_node("/root/ItemDatabase")
+	var item = item_database.get_item(item_id)
+	var item_type: String = item.get("type", "")
 
 	if item_type == "consumable":
-		var hp_restore := item.get("hp_restore", 0)
-		var player := get_tree().get_root().find_node("Player", true, false)
+		var hp_restore: int = item.get("hp_restore", 0)
+		var players: Array = get_tree().get_nodes_in_group("players")
+		var player: Node = players[0] if players.size() > 0 else null
 		if player != null and player.is_alive():
 			player.heal(hp_restore)
 			remove_item(item_id, 1)
 			return true
 	elif item_type == "weapon":
-		# Weapon equipping logic would go here
 		remove_item(item_id, 1)
 		return true
 
 	return false
 
 func consume_item_on_pickup(item_id: String) -> void:
-	# Mark item as consumed when picked up (1 turn action)
-	TurnManager.consume_action()
+	var tm: Node = get_node("/root/TurnManager")
+	tm.consume_action()
