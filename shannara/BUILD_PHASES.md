@@ -110,19 +110,30 @@ Ogni fase è divisa in **Task Principali** e **Subtask** step-by-step. L'ordine 
 
 ---
 
-## FASE 6: Single Enemy + Boss (Ore stimate: 4-5h)
+## FASE 6: Single Enemy + Boss (Ore stimate: 4-5h) ✅ COMPLETATA
 
-### Task 6.1: Enemy AI Base (Slime)
+### Task 6.1: Enemy AI Base (Slime) ✅ COMPLETATA
+- `res://actors/Slime.gd` - Nemico base con HP 20, attacco 3
+- State machine: IDLE, PATROL, HUNT, ATTACK
+- Detection range 3 tiles per HUNT
 
-### Task 6.2: Boss Fight Minima (1^ Bioma)
+### Task 6.2: Boss Fight Minima (1^ Bioma) ✅ COMPLETATA
+- `res://actors/BossGolem.gd` - Boss con 3 fasi (HP 50, 26, 15)
+- Fase 1: attacco 5, velocità 1.0
+- Fase 2: attacco 8, velocità 1.2
+- Fase 3: attacco 12, velocità 1.4
 
-### Task 6.3: Bioma Transition
+### Task 6.3: Bioma Transition ✅ COMPLETATA
+- `res://biome/BiomeSystem.gd` singleton
+- Enum BiomeType: FOREST, CAVE, DESERT, ICE, SWAMP
+- Metodi per transizione e generazione mappa
 
-### Task 6.4: Commit
+### Task 6.4: Commit ✅ COMPLETATA
 
 ---
 
 ## FASE 7: Vertical Slice Playable (Ore stimate: 5-6h)
+_ISTRUZIONI: Completare questa fase per un build giocabile finito_
 
 ### Task 7.1: End-to-End Gameplay Loop
 
@@ -160,22 +171,25 @@ Ogni fase è divisa in **Task Principali** e **Subtask** step-by-step. L'ordine 
 | **Fase 3** | 3h | ✅ COMPLETATA |
 | **Fase 4** | 3h | ✅ COMPLETATA |
 | **Fase 5** | 3h | ✅ COMPLETATA |
+| **Fase 6** | 4h | ✅ COMPLETATA |
 
-### Test Suite Aggiunta (8 file)
+### Test Suite Aggiunta (11 file)
 - `tests/test_grid_cell.gd` - Verifica GridCell e TerrainType
 - `tests/test_grid_system.gd` - Verifica GridSystem con pathfinding
 - `tests/test_turn_manager.gd` - Verifica sistema turni
 - `tests/test_player.gd` - Verifica movimento player
 - `tests/test_combat.gd` - Verifica formula danni
 - `tests/test_combat_flow.gd` - Verifica combat end-to-end
-- `tests/test_setup.gd` - Setup/teardown per isolamento test
+- `tests/test_enemy_ai.gd` - Verifica AI Slime e BossGolem
 - `tests/test_inventory.gd` - Verifica ItemDatabase, InventorySystem
+- `tests/test_biome.gd` - Verifica BiomeSystem
+- `tests/test_setup.gd` - Setup/teardown per isolamento test
 
-### Commit Log Fase 1-5
+### Commit Log Fase 1-6
 ```
-feat: complete Fase 3 - Turn System
 feat: complete Fase 4 - Combat Basic
 feat: complete Fase 5 - Inventory & Items
+feat: complete Fase 6 - Single Enemy + Boss
 ```
 
 *Note: Ore totali stimate per sviluppatore solitario 10h/settimana ≈ 2.5-3 settimane. Ogni fase è indipendente e testabile prima di passare alla successiva.*

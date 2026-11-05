@@ -4,14 +4,13 @@
 ;
 ; Format:
 ;   [section] ; section goes between []
-;   param=value ; assign values to parameters
+;   param=value ; assign values in quotes, or as bare words
 
 config_version=5
 
 [application]
 
 config/name="Shannara"
-run/main_scene="res://scenes/Enemy.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 
@@ -19,6 +18,8 @@ config/icon="res://icon.svg"
 
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+window/size/width=1920
+window/size/height=1080
 
 [physics]
 
@@ -27,3 +28,19 @@ window/stretch/aspect="expand"
 [rendering]
 
 rendering_device/driver.windows="d3d12"
+rendering/renderer=forward_plus
+
+[autoload]
+
+GridSystem="res://utils/GridSystem.gd"
+TurnManager="res://utils/TurnManager.gd"
+ItemDatabase="res://utils/ItemDatabase.gd"
+InventorySystem="res://inventory/InventorySystem.gd"
+CombatResolver="res://combat/CombatResolver.gd" type=Resource
+BiomeSystem="res://biome/BiomeSystem.gd"
+Player="res://actors/Player.gd" type=PackedScene
+Enemy="res://actors/Enemy.gd" type=PackedScene
+
+[run]
+
+main_scene="res://scenes/GameRoot.tscn"
