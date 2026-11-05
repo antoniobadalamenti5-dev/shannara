@@ -7,6 +7,7 @@ const TESTS: Array = [
 	{"file": "res://tests/test_movement.gd", "name": "Movement", "phase": "phase2"},
 	{"file": "res://tests/test_elevation.gd", "name": "Elevation", "phase": "phase2"},
 	{"file": "res://tests/test_input_manager.gd", "name": "InputManager", "phase": "phase2"},
+	{"file": "res://tests/test_input_wiring.gd", "name": "InputWiring", "phase": "phase2"},
 	{"file": "res://tests/test_turn_manager.gd", "name": "TurnManager", "phase": "phase3"},
 	{"file": "res://tests/test_player.gd", "name": "Player", "phase": "phase3"},
 	{"file": "res://tests/test_enemy_ai.gd", "name": "EnemyAI", "phase": "phase3"},

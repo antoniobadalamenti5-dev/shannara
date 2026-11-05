@@ -49,7 +49,7 @@ Ogni settimana: check ore accumulate, eventuali ridimensionamenti scope, report 
 
 **Sistema completati:**
 - GameManager: Orchestratore principale del gioco
-- InputManager: Gestione input tastiera (freccette, A, I, SPAZIO, ESC)
+- InputManager: Gestione input tastiera (frecce/WASD, Q/E quote, F attacco, I, SPAZIO, ESC)
 - GameUI: Interfaccia utente con HP display e turn counter
 - CombatResolver: Aggiornato con signal attack_resolved e supporto get_attack_damage
 

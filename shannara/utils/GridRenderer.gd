@@ -14,6 +14,7 @@ const COLOR_SPIKE := Color(0.55, 0.20, 0.20)
 const COLOR_GRID_LINE := Color(0, 0, 0, 0.25)
 const COLOR_ELEV_UP := Color(0.30, 0.45, 0.30)
 const COLOR_ELEV_DOWN := Color(0.15, 0.18, 0.30)
+const COLOR_ELEV_EDGE := Color(1, 1, 1, 0.28)
 const COLOR_PLAYER := Color(0.0, 0.8, 1.0, 0.9)
 const COLOR_HIGHLIGHT := Color(1.0, 1.0, 0.0, 0.5)
 
@@ -36,11 +37,12 @@ func _draw() -> void:
 	# Disegna outline della griglia
 	_draw_grid_outline(gs)
 
-	# Evidenzia cella iniziale player
-	_highlight_cell(5, 5)
-
 func _draw_cell(gs, x: int, y: int) -> void:
-	var cell = gs.get_cell_at(x, y, 0)
+	# Task 2.3: si mostra la cella PIÙ ALTA calpestabile, non il layer 0.
+	# La piattaforma del layout vive a quota +1 (sotto resta pavimento), il
+	# fossato a -1 (sopra ha spuntoni non calpestabili): senza questa scelta
+	# le quote esistono nei dati ma non si vedono.
+	var cell = _visible_cell(gs, x, y)
 	if cell == null:
 		return
 
@@ -48,6 +50,17 @@ func _draw_cell(gs, x: int, y: int) -> void:
 	var rect := Rect2(world_pos, Vector2(TILE_SIZE, TILE_SIZE))
 	draw_rect(rect, _cell_color(cell), true)
 	draw_rect(rect, COLOR_GRID_LINE, false, 1.0)
+	if cell.elevation != 0:
+		# Bordo dedicato: distingue quota a parità di terreno.
+		draw_rect(rect.grow(-3.0), COLOR_ELEV_EDGE, false, 1.0)
+
+# Cella da mostrare per la colonna (x,y): +1 se calpestabile, poi 0, poi -1.
+func _visible_cell(gs, x: int, y: int):
+	for elev in [1, 0, -1]:
+		var cell = gs.get_cell_at(x, y, elev)
+		if cell != null and cell.walkable:
+			return cell
+	return gs.get_cell_at(x, y, 0)
 
 func _draw_grid_outline(gs) -> void:
 	# Outline perimetrale (bianco)

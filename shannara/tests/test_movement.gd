@@ -48,6 +48,39 @@ func run_tests() -> void:
 	assert_eq(player.grid_x, 6, "failed move leaves grid_x unchanged")
 	assert_eq(player.grid_y, 4, "failed move leaves grid_y unchanged")
 
+	# --- Quota a livello Player: move_to_elevation (Task 2.3) ---
+	# Lo spawn (5,5) è dentro la colonna della piattaforma: salita/discesa sul posto.
+	_teleport(grid_system, player, 5, 5, 0)
+	assert_true(player.move_to_elevation(1), "step up in place onto plateau succeeds")
+	assert_eq(player.grid_elevation, 1, "player at elevation +1 after step up")
+	assert_eq(grid_system.get_cell_at(5, 5, 1).occupant, player, "plateau cell occupied by player")
+	assert_null(grid_system.get_cell_at(5, 5, 0).occupant, "ground cell vacated after step up")
+	assert_true(turn_manager.is_player_turn(), "turn still PLAYER_TURN after elevation moves")
+
+	assert_true(player.move_to_elevation(-1), "step down back to ground succeeds")
+	assert_eq(player.grid_elevation, 0, "player back at elevation 0")
+	assert_eq(grid_system.get_cell_at(5, 5, 0).occupant, player, "ground cell re-occupied after step down")
+
+	# +1 non calpestabile fuori piattaforma: rifiuto, stato invariato.
+	_teleport(grid_system, player, 10, 10, 0)
+	assert_false(player.move_to_elevation(1), "step up where +1 not walkable rejected")
+	assert_eq(player.grid_elevation, 0, "rejected step up leaves elevation unchanged")
+	assert_eq(grid_system.get_cell_at(10, 10, 0).occupant, player, "player still on its cell after rejected step")
+
+	# Delta di 2 quote sempre vietato (regola can_move_to: de <= 1).
+	assert_false(player.move_to_elevation(2), "2-level elevation step rejected")
+
+	# Fossato: sopra il fondo ci sono gli spuntoni, non calpestabili.
+	_teleport(grid_system, player, 13, 5, -1)
+	assert_false(player.move_to_elevation(1), "climb from moat floor onto spikes rejected")
+	assert_eq(player.grid_elevation, -1, "still on moat floor after rejected climb")
+
+	# Fuori turno: mossa di quota rifiutata, occupazione intatta.
+	turn_manager.current_state = 1  # ENEMY_TURN
+	assert_false(player.move_to_elevation(1), "elevation move out of turn rejected")
+	assert_eq(grid_system.get_cell_at(13, 5, -1).occupant, player, "occupation unchanged after out-of-turn attempt")
+	turn_manager.current_state = 0  # ripristino per i passi successivi
+
 	# Mossa contro il perimetro: muri x=19 / y=19
 	_teleport(grid_system, player, 18, 18, 0)
 	assert_false(player.move_direction(1, 1), "diagonal into corner wall rejected")
