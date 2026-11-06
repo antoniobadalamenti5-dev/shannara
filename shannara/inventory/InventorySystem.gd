@@ -33,9 +33,13 @@ func get_item_count(item_id: String) -> int:
 		return active_items[item_id]
 	return 0
 
-func use_item(item_id: String) -> bool:
+func use_item(item_id: String) -> Dictionary:
+	"""
+	Usa un item dall'inventario.
+	Restituisce Dictionary: {"success": bool, "message": String, "consumed": bool}
+	"""
 	if not has_item(item_id, 1):
-		return false
+		return {"success": false, "message": "Nessun " + item_id, "consumed": false}
 
 	var item_database = get_node("/root/ItemDatabase")
 	var item = item_database.get_item(item_id)
@@ -45,15 +49,23 @@ func use_item(item_id: String) -> bool:
 		var hp_restore: int = item.get("hp_restore", 0)
 		var players: Array = get_tree().get_nodes_in_group("players")
 		var player: Node = players[0] if players.size() > 0 else null
-		if player != null and player.is_alive():
-			player.heal(hp_restore)
-			remove_item(item_id, 1)
-			return true
+		if player == null:
+			return {"success": false, "message": "Nessun giocatore", "consumed": false}
+		if not player.is_alive():
+			return {"success": false, "message": "Il giocatore è morto", "consumed": false}
+
+		# Controlla se HP è già massimo per consumabili
+		if item.get("hp_restore", 0) > 0 and player.current_hp >= player.max_hp:
+			return {"success": false, "message": "HP al massimo!", "consumed": false}
+
+		player.heal(hp_restore)
+		remove_item(item_id, 1)
+		return {"success": true, "message": "Usato " + item_id, "consumed": true}
 	elif item_type == "weapon":
 		remove_item(item_id, 1)
-		return true
+		return {"success": true, "message": "Equipaggiato " + item_id, "consumed": false}
 
-	return false
+	return {"success": false, "message": "Tipo item sconosciuto", "consumed": false}
 
 func consume_item_on_pickup(item_id: String) -> void:
 	var tm: Node = get_node("/root/TurnManager")

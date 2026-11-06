@@ -129,10 +129,10 @@ func _spawn_initial_encounters() -> void:
 			var potion_scene = load("res://scenes/HealingPotion.tscn")
 			if potion_scene != null:
 				var potion = potion_scene.instantiate()
-				potion.grid_x = id.get("grid_x", 6)
-				potion.grid_y = id.get("grid_y", 8)
-				potion.grid_elevation = id.get("grid_elevation", 0)
-				potion.position = Vector2((potion.grid_x + 0.5) * 32, (potion.grid_y + 0.5) * 32)
+				# Items in the world don't have grid coordinates; they're simple pickups
+				var grid_x = id.get("grid_x", 6)
+				var grid_y = id.get("grid_y", 8)
+				potion.position = Vector2((grid_x + 0.5) * 32, (grid_y + 0.5) * 32)
 				add_child(potion)
 
 func ProcessPlayerAction(action_type: String, dx: int = 0, dy: int = 0) -> Dictionary:
