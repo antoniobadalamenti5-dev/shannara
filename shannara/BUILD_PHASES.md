@@ -181,12 +181,15 @@ _ISTRUZIONI: Completare questa fase per un build giocabile finito_
 
 ### Task 7.3: Commit Finale e Documentazione ✅ COMPLETATO
 
-**Files creati per Fase 7:**
-- `res://utils/GameManager.gd` - Orchestratore principale
+**Files creati/aggiornati per Fase 7:**
+- `res://utils/GameManager.gd` - Orchestratore principale con spawn dinamico
 - `res://utils/InputManager.gd` - Gestione input tastiera
 - `res://ui/GameUI.gd` - Interfaccia utente
 - `res://scenes/GameUI.tscn` - Scena UI
 - `res://scenes/GameRoot.tscn` - Aggiornata con autoloads nuovi
+- `res://scenes/HealingPotion.tscn` - Nuova scena per pickup item
+- `res://scenes/BossGolem.tscn` - Scena boss (esisteva già)
+- `res://biome/BiomeSystem.gd` - Generazione nemici/items per biome
 
 **Test aggiunti:**
 - `tests/test_gameplay.gd` - 7 test gameplay loop
@@ -196,7 +199,19 @@ _ISTRUZIONI: Completare questa fase per un build giocabile finito_
 **Modifiche:**
 - `project.godot` - Aggiunti autoload GameManager, InputManager
 - `combat/CombatResolver.gd` - Aggiunto signal attack_resolved, supporto get_attack_damage
+- `actors/Slime.gd` - Aggiornato per death cleanup e position sync
+- `actors/BossGolem.gd` - Aggiunto position sync, death cleanup, can_attack()
+- `items/item_database.json` - Aggiunto scene_path per healing_potion
 - `BUILD_PHASES.md` - Aggiornato stato Fase 7
+
+**Feature completate:**
+- Movimento 4-direzionali con consumo turno
+- Attacco adiacente con consumo turno
+- Stato HP display
+- Turn counter display
+- Gestione Input (frecce/WASD, F, I, SPAZIO, ESC)
+- Spawn dinamico nemici e item per ogni bioma
+- BossGolem appare correttamente in FOREST
 
 ### Task 7.4: Handoff Report ✅ COMPLETATO
 
