@@ -250,16 +250,23 @@ Documentazione creata:
 | **Fase 4** | 3h | ✅ COMPLETATA |
 | **Fase 5** | 3h | ✅ COMPLETATA |
 | **Fase 6** | 4h | ✅ COMPLETATA |
-| **Fase 7** | 5h | ✅ COMPLETATA (con bug fix ereditarietà in corso) |
+| **Fase 7** | 5h | ✅ COMPLETATA (bug fix e InventoryUI aggiunti) |
 
 ### Bug Fix Applicati (Fase 7):
+|- **2026-11-06**: Risolto errore attacco BossGolem "Non adiacente"
+  - BossGolem.gd mancava metodo `is_connected_to_grid()` richiesto da CombatResolver._check_adjacent()
+  - Aggiunto metodo e rimosso debug print da CombatResolver.gd
+|- **2026-11-06**: Aggiunto sistema InventoryUI
+  - InputManager emetteva `inventory_requested` ma non esisteva UI per gestirlo
+  - Creato InventoryUI.gd come CanvasLayer toggleable
+  - Consuma 1 turno all'apertura/chiusura (azione del giocatore)
 - **2026-11-05**: Risolto errore "Could not resolve class Enemy" 
   - Modificato Slime.gd e BossGolem.gd per implementare EnemyState e metodi in modo autonomo
   - Rimosso `extends Enemy` che causava problemi di risoluzione class_name
   - Aggiunto test_turn_flow.gd per verificare il flusso completo dei turni
   - Aggiornato spawn Slime a (8,5) per test di distanza HUNT
 
-### Test Suite Aggiunta (16 file)
+### Test Suite Aggiunta (17 file)
 - `tests/test_grid_cell.gd` - Verifica GridCell e TerrainType
 - `tests/test_grid_system.gd` - Verifica GridSystem con pathfinding
 - `tests/test_turn_manager.gd` - Verifica sistema turni
@@ -272,6 +279,7 @@ Documentazione creata:
 - `tests/test_gameplay.gd` - Verifica loop gameplay Player->Enemy->Player
 - `tests/test_game_manager.gd` - Verifica GameManager orchestratore
 - `tests/test_input_manager.gd` - Verifica gestione input tastiera
+- `tests/test_inventory_ui.gd` - Verifica InventoryUI, apertura/chiusura, uso pozione
 - `tests/test_setup.gd` - Setup/teardown per isolamento test
 - `tests/test_turn_cycle.gd` - Verifica ciclo completo turni
 - `tests/test_turn_flow.gd` - End-to-end turn flow verification
