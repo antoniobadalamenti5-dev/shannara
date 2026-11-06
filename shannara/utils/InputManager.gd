@@ -37,8 +37,10 @@ func _input(event: InputEvent) -> void:
 func _handle_key_input(event: InputEventKey) -> void:
 	var turn_manager = get_node_or_null("/root/TurnManager")
 	if turn_manager == null:
+		print("[InputManager] WARNING: TurnManager non trovato")
 		return
 	if not turn_manager.is_player_turn():
+		print("[InputManager] Ignorato input - non è il turno del giocatore (current_state=%s)" % turn_manager.current_state)
 		return
 
 	var key: int = event.keycode

@@ -1,9 +1,13 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=4 uid="slime_scene_001"]
 
 [ext_resource path="res://actors/Slime.gd" type="Script" id=1]
+[ext_resource path="res://icon.svg" type="Texture2D" id=2]
 
 [node name="Slime" type="Node2D"]
-script = ExtResource( str="1" )
+z_index = 5
+script = ExtResource( 1 )
 
-[child name="Sprite2D" type="Sprite2D" parent="."]
-texture = null
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource( 2 )
+centered = true
+scale = Vector2(0.15, 0.15)

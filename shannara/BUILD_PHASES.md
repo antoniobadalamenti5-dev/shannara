@@ -139,7 +139,7 @@ _ISTRUZIONI: Completare questa fase per un build giocabile finito_
 
 **Sistema creati:**
 - `res://utils/GameManager.gd` - Orchestratore principale del gioco
-- `res://utils/InputManager.gd` - Gestione input tastiera (freccette, A per attacco, I per inventario)
+- `res://utils/InputManager.gd` - Gestione input tastiera (frecce/WASD per muovere, F e frecce per attaccare, I per inventario)
 - `res://ui/GameUI.gd` - Interfaccia utente con HP display
 - `res://scenes/GameUI.tscn` - Scena UI
 - `res://scenes/GameRoot.tscn` - Aggiornata con tutti i sistemi
@@ -154,7 +154,7 @@ _ISTRUZIONI: Completare questa fase per un build giocabile finito_
 - Attacco adiacente con consumo turno
 - Stato HP display
 - Turn counter display
-- Gestione Input (freccette, A, I, SPAZIO, ESC)
+- Gestione Input (frecce/WASD, F, I, SPAZIO, ESC)
 
 ### Task 7.2: Vertical Slice Criteri Accettazione ✅ COMPLETATO
 
@@ -222,9 +222,16 @@ Documentazione creata:
 | **Fase 4** | 3h | ✅ COMPLETATA |
 | **Fase 5** | 3h | ✅ COMPLETATA |
 | **Fase 6** | 4h | ✅ COMPLETATA |
-| **Fase 7** | 5h | ✅ COMPLETATA |
+| **Fase 7** | 5h | ✅ COMPLETATA (con bug fix ereditarietà in corso) |
 
-### Test Suite Aggiunta (14 file)
+### Bug Fix Applicati (Fase 7):
+- **2026-11-05**: Risolto errore "Could not resolve class Enemy" 
+  - Modificato Slime.gd e BossGolem.gd per implementare EnemyState e metodi in modo autonomo
+  - Rimosso `extends Enemy` che causava problemi di risoluzione class_name
+  - Aggiunto test_turn_flow.gd per verificare il flusso completo dei turni
+  - Aggiornato spawn Slime a (8,5) per test di distanza HUNT
+
+### Test Suite Aggiunta (16 file)
 - `tests/test_grid_cell.gd` - Verifica GridCell e TerrainType
 - `tests/test_grid_system.gd` - Verifica GridSystem con pathfinding
 - `tests/test_turn_manager.gd` - Verifica sistema turni
@@ -238,6 +245,12 @@ Documentazione creata:
 - `tests/test_game_manager.gd` - Verifica GameManager orchestratore
 - `tests/test_input_manager.gd` - Verifica gestione input tastiera
 - `tests/test_setup.gd` - Setup/teardown per isolamento test
+- `tests/test_turn_cycle.gd` - Verifica ciclo completo turni
+- `tests/test_turn_flow.gd` - End-to-end turn flow verification
+- `tests/test_gameplay_simple.gd` - Simple gameplay verification
+- `tests/QuickVerify.gd` - Quick diagnostic script
+- `tests/QuickVerify.tscn` - QuickVerify scene for rapid testing
+- `tests/TEST_FLOW_CHECKLIST.md` - Manual verification checklist
 
 ### Commit Log Fase 1-7
 ```

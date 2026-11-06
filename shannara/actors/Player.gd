@@ -2,8 +2,9 @@
 # Player character with 100 HP, can act during player turn
 # Implements input-based movement with turn consumption
 
-class_name Player
 extends Node2D
+
+class_name Player
 
 const TILE_SIZE: int = 32
 
@@ -72,7 +73,9 @@ func move_to_elevation(delta_elev: int) -> bool:
 	return false
 
 func take_damage(amount: int) -> void:
+	print("[Player] take_damage(%s) - HP: %s -> %s" % [amount, current_hp, max(0, current_hp - abs(amount))])
 	current_hp = max(0, current_hp - abs(amount))
+	print("[Player] HP residuo: %s" % current_hp)
 
 func heal(amount: int) -> void:
 	current_hp = min(max_hp, current_hp + abs(amount))
@@ -82,22 +85,30 @@ func get_attack_damage() -> int:
 
 func attack_direction(dx: int, dy: int) -> bool:
 	"""Attack adjacent cell in direction. Consumes 1 turn on success."""
+	print("[Player] attack_direction(%s, %s) - can_act=%s, pos=%s,%s" % [dx, dy, can_act(), grid_x, grid_y])
 	if not can_act():
+		print("[Player] can_act() = false, abortisco attacco")
 		return false
 	var target_x: int = grid_x + dx
 	var target_y: int = grid_y + dy
 	var target_elev: int = grid_elevation
+	print("[Player] Target: %s, %s (elev %s)" % [target_x, target_y, target_elev])
 	# Find enemy at target position
 	var enemies: Array = get_tree().get_nodes_in_group("enemies")
+	print("[Player] Nemici trovati: %s" % enemies.size())
 	for enemy in enemies:
-		if enemy != null and enemy.is_alive() and enemy.grid_x == target_x and enemy.grid_y == target_y and enemy.grid_elevation == target_elev:
-			var cr = get_node("/root/CombatResolver")
-			var result: Dictionary = cr.resolve_attack(self, enemy)
-			if result.success:
-				var tm = get_node("/root/TurnManager")
-				tm.consume_action()
-				attacked.emit(target_x, target_y, result.damage)
-				return true
+		if enemy != null and enemy.is_alive():
+			print("[Player] Controllo nemico %s a (%s, %s, %s)" % [enemy.name, enemy.grid_x, enemy.grid_y, enemy.grid_elevation])
+			if enemy.grid_x == target_x and enemy.grid_y == target_y and enemy.grid_elevation == target_elev:
+				print("[Player] Encontro il nemico! Attacco!")
+				var cr = get_node("/root/CombatResolver")
+				var result: Dictionary = cr.resolve_attack(self, enemy)
+				print("[Player] Risultato attacco: %s" % result.success)
+				if result.success:
+					var tm = get_node("/root/TurnManager")
+					tm.consume_action()
+					attacked.emit(target_x, target_y, result.damage)
+					return true
 	return false
 
 func _attempt_move_to(target_x: int, target_y: int, target_elev: int) -> bool:

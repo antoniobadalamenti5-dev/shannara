@@ -3,6 +3,11 @@
 
 extends TestSuite
 
+# Helper: riapre il turno del giocatore. Serve quando un'azione ha già
+# chiuso il turno (consume_action -> end_turn).
+func _player_turn(tm) -> void:
+	tm.end_turn()  # end_turn() chiude ENEMY_TURN -> PLAYER_TURN
+
 func run_tests() -> void:
 	print("\n[TEST] Movement")
 
@@ -38,11 +43,13 @@ func run_tests() -> void:
 	assert_null(grid_system.get_cell_at(5, 5, 0).occupant, "old cell vacated")
 	assert_eq(player.position.x, (6 + 0.5) * 32, "world position synced after move")
 
-	# Passo successivo (6,5) -> (6,4)
+	# Passo successivo (6,5) -> (6,4): serve riaprire il turno
+	_player_turn(turn_manager)
 	assert_true(player.move_direction(0, -1), "move up succeeds")
 	assert_eq(player.grid_y, 4, "grid_y advanced to 4")
 
 	# Diagonale: mossa a 2 celle Manhattan, ora bloccata da can_move_to
+	# Movimento bloccato NON consuma il turno, quindi non serve _player_turn
 	moved = player.move_direction(1, 1)
 	assert_false(moved, "diagonal (1,1) rejected by validation")
 	assert_eq(player.grid_x, 6, "failed move leaves grid_x unchanged")
@@ -51,18 +58,20 @@ func run_tests() -> void:
 	# --- Quota a livello Player: move_to_elevation (Task 2.3) ---
 	# Lo spawn (5,5) è dentro la colonna della piattaforma: salita/discesa sul posto.
 	_teleport(grid_system, player, 5, 5, 0)
+	_player_turn(turn_manager)  # move_to_elevation chiude il turno
 	assert_true(player.move_to_elevation(1), "step up in place onto plateau succeeds")
 	assert_eq(player.grid_elevation, 1, "player at elevation +1 after step up")
 	assert_eq(grid_system.get_cell_at(5, 5, 1).occupant, player, "plateau cell occupied by player")
 	assert_null(grid_system.get_cell_at(5, 5, 0).occupant, "ground cell vacated after step up")
-	assert_true(turn_manager.is_player_turn(), "turn still PLAYER_TURN after elevation moves")
 
+	_player_turn(turn_manager)
 	assert_true(player.move_to_elevation(-1), "step down back to ground succeeds")
 	assert_eq(player.grid_elevation, 0, "player back at elevation 0")
-	assert_eq(grid_system.get_cell_at(5, 5, 0).occupant, player, "ground cell re-occupied after step down")
+	assert_eq(grid_system.get_cell_at(5, 5, 0).occupant, player, "ground cell re-occupied after move down")
 
 	# +1 non calpestabile fuori piattaforma: rifiuto, stato invariato.
 	_teleport(grid_system, player, 10, 10, 0)
+	# Movimento rifiutato, turno NON consumato
 	assert_false(player.move_to_elevation(1), "step up where +1 not walkable rejected")
 	assert_eq(player.grid_elevation, 0, "rejected step up leaves elevation unchanged")
 	assert_eq(grid_system.get_cell_at(10, 10, 0).occupant, player, "player still on its cell after rejected step")

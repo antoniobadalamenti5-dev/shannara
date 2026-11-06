@@ -70,7 +70,7 @@ Il progetto Dungeon Crawler RPG è stato completato con successo fino alla **Fas
 - [x] Spazio = attendi
 
 ### Combattimento
-- [x] Attacco adiacente (A)
+- [x] Attacco adiacente (F per mirare, frecce/WASD per scegliere la direzione, F o SPAZIO per confermare)
 - [x] Danni deterministici (attacco - difesa)
 - [x] Rimozione nemico alla morte
 - [x] Aggiornamento HP in tempo reale

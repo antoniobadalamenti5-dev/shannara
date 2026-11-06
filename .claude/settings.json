@@ -1,4 +1,4 @@
-﻿{
+{
   "permission_settings": {
     "allow_external_dir": true,
     "allow_bash": true,
@@ -8,7 +8,12 @@
   },
   "automation": {
     "auto_accept_permissions": false,
-    "require_approval_for": ["bash", "write", "edit", "delete"]
+    "require_approval_for": [
+      "bash",
+      "write",
+      "edit",
+      "delete"
+    ]
   },
   "behavior": {
     "max_concurrent_agents": 2,
@@ -17,6 +22,12 @@
   },
   "profiles": {
     "default_model": "claude-sonnet-5-5",
-    "fallback_models": ["claude-opus-5-5", "claude-haiku-5-5"]
+    "fallback_models": [
+      "claude-opus-5-5",
+      "claude-haiku-5-5"
+    ]
+  },
+  "enabledPlugins": {
+    "pixelfx@pixelfx": true
   }
 }

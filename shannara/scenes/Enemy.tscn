@@ -1,14 +1,13 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=4 uid="enemy_scene_003"]
 
 [ext_resource path="res://actors/Enemy.gd" type="Script" id=1]
-[ext_resource path="res://icon.svg" type="Texture" id=2]
+[ext_resource path="res://icon.svg" type="Texture2D" id=2]
 
 [node name="Enemy" type="Node2D"]
-script = ExtResource( str="1" )
+z_index = 4
+script = ExtResource( 1 )
 
-[child name="Sprite2D" type="Sprite2D"]
-texture = ExtResource( str="2" )
-parent = "."
-
-[editable]
-Enemy/true
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource( 2 )
+centered = true
+scale = Vector2(0.2, 0.2)

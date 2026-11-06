@@ -22,16 +22,18 @@ var active_enemies: Array = []
 @onready var biome_system: Node = get_tree().root.get_node_or_null(BIOOME_SYSTEM_PATH)
 
 func _ready() -> void:
-	call_deferred("_post_init")
-
-func _post_init() -> void:
 	_connect_turn_manager_signals()
 
 func _connect_turn_manager_signals() -> void:
-	if turn_manager != null:
-		turn_manager.connect("turn_start", Callable(self, "_on_turn_start"))
-		turn_manager.connect("turn_end", Callable(self, "_on_turn_end"))
-		turn_manager.connect("action_consumed", Callable(self, "_on_action_consumed"))
+	var tm = get_tree().root.get_node_or_null("/root/TurnManager")
+	if tm == null:
+		print("[GameManager] WARNING: TurnManager non trovato per la connettività dei segnali!")
+		return
+	print("[GameManager] Connettendo segnali a TurnManager")
+	tm.connect("turn_start", Callable(self, "_on_turn_start"))
+	tm.connect("turn_end", Callable(self, "_on_turn_end"))
+	tm.connect("action_consumed", Callable(self, "_on_action_consumed"))
+	print("[GameManager] Segnali connessi")
 
 func _on_turn_start(new_state: int) -> void:
 	if turn_manager == null:
@@ -47,16 +49,31 @@ func _on_turn_start(new_state: int) -> void:
 func _on_turn_end() -> void:
 	pass
 
+# Fine turno: il consumo dell'azione è ciò che chiude il turno del giocatore.
+# Il vincolo is_player_turn() NON è decorativo: anche i nemici chiamano
+# consume_action() in take_action(), e farli passare di qui ribalterebbe lo
+# stato a PLAYER_TURN in mezzo alla fase nemica (il primo slime agirebbe e
+# gli altri resterebbero fermi). La fase nemica si chiude da sola con
+# TurnManager._process_enemy_turn() -> end_turn().
 func _on_action_consumed() -> void:
-	pass
+	print("[GameManager] riceve action_consumed signal!")
+	var tm = turn_manager
+	if tm != null and tm.is_player_turn():
+		print("[GameManager] chiama end_turn()")
+		tm.end_turn()
+	else:
+		print("[GameManager] non è il turno del giocatore, ignoro")
 
 func _on_biome_changed(new_biome: int) -> void:
 	emit_signal("level_transition", new_biome)
 
 func StartGame() -> bool:
+	print("[GameManager] StartGame() chiamato")
 	if turn_manager != null:
 		turn_manager.turn_count = 0
 		turn_manager.start_player_turn()
+	else:
+		print("[GameManager] WARNING: turn_manager è null!")
 	is_game_running = true
 	emit_signal("game_started")
 	_spawn_initial_encounters()
@@ -137,6 +154,8 @@ func _process_attack(player: Player, dx: int, dy: int) -> Dictionary:
 		result.success = true
 		result.turn_consumed = true
 		result.message = "Hai attaccato!"
+	else:
+		result.message = "Nessun nemico adiacente in quella direzione"
 	return result
 
 func CheckVictoryConditions() -> bool:

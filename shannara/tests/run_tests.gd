@@ -11,10 +11,14 @@ const TESTS: Array = [
 	{"file": "res://tests/test_turn_manager.gd", "name": "TurnManager", "phase": "phase3"},
 	{"file": "res://tests/test_player.gd", "name": "Player", "phase": "phase3"},
 	{"file": "res://tests/test_enemy_ai.gd", "name": "EnemyAI", "phase": "phase3"},
+	{"file": "res://tests/test_turn_cycle.gd", "name": "TurnCycle", "phase": "phase3"},
+	{"file": "res://tests/test_turn_flow.gd", "name": "TurnFlow", "phase": "phase3"},
+	{"file": "res://tests/test_gameplay_simple.gd", "name": "GameplaySimple", "phase": "phase3"},
 	{"file": "res://tests/test_combat.gd", "name": "Combat", "phase": "phase4"},
 	{"file": "res://tests/test_combat_flow.gd", "name": "CombatFlow", "phase": "phase4"},
 	{"file": "res://tests/test_inventory.gd", "name": "Inventory", "phase": "phase5"},
 	{"file": "res://tests/test_biome.gd", "name": "Biome", "phase": "phase6"},
+	{"file": "res://tests/test_combat_integration.gd", "name": "CombatIntegration", "phase": "phase4"},
 ]
 
 var _filter: String = "all"

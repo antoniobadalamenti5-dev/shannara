@@ -17,11 +17,11 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+TurnManager="*res://utils/TurnManager.gd"
+GridSystem="*res://utils/GridSystem.gd"
+CombatResolver="*res://combat/CombatResolver.gd"
 GameManager="*res://utils/GameManager.gd"
 InputManager="*res://utils/InputManager.gd"
-GridSystem="*res://utils/GridSystem.gd"
-TurnManager="*res://utils/TurnManager.gd"
-CombatResolver="*res://combat/CombatResolver.gd"
 BiomeSystem="*res://biome/BiomeSystem.gd"
 ItemDatabase="*res://utils/ItemDatabase.gd"
 InventorySystem="*res://inventory/InventorySystem.gd"

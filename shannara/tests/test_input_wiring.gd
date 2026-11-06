@@ -6,6 +6,10 @@
 
 extends TestSuite
 
+# Helper: riapre il turno del giocatore. Con Fase 3, ogni azione chiude il turno.
+func _player_turn(tm) -> void:
+	tm.end_turn()  # chiude ENEMY_TURN -> PLAYER_TURN
+
 func run_tests() -> void:
 	print("\n[TEST] InputWiring")
 
@@ -35,40 +39,48 @@ func run_tests() -> void:
 	assert_null(gs.get_cell_at(5, 5, 0).occupant, "spawn cell vacated")
 
 	# --- WASD: W = su, stessa strada delle frecce ---
+	_player_turn(tm)
 	_press(im, KEY_W)
 	assert_eq([p.grid_x, p.grid_y], [6, 4], "KEY_W moved player up")
 
 	# --- A ora è movimento (sinistra), non più attacco ---
+	_player_turn(tm)
 	_press(im, KEY_A)
 	assert_eq([p.grid_x, p.grid_y], [5, 4], "KEY_A moved player left (movement, not attack)")
 
 	# --- D = destra ---
+	_player_turn(tm)
 	_press(im, KEY_D)
 	assert_eq([p.grid_x, p.grid_y], [6, 4], "KEY_D moved player right")
 
 	# --- Q/E changing elevation through the wiring ---
+	_player_turn(tm)
 	_press(im, KEY_E)
 	assert_eq(p.grid_elevation, 1, "KEY_E stepped up a level")
+	# secondo KEY_E è bloccato (non c'è +2), quindi NON chiude il turno
 	_press(im, KEY_E)
 	assert_eq(p.grid_elevation, 1, "second KEY_E blocked (no +2 support)")
+	_player_turn(tm)
 	_press(im, KEY_Q)
 	assert_eq(p.grid_elevation, 0, "KEY_Q stepped back down")
 
 	# --- Freccia contro il muro di perimetro: nessun movimento (criterio 2.4.3) ---
 	_teleport(gs, p, 1, 1, 0)
-	_press(im, KEY_LEFT)
+	_press(im, KEY_LEFT)  # move bloccato, turno NON consumato
 	assert_eq([p.grid_x, p.grid_y], [1, 1], "KEY_LEFT into perimeter wall: no movement")
-	_press(im, KEY_UP)
+
+	_press(im, KEY_UP)  # anche qui bloccato
 	assert_eq([p.grid_x, p.grid_y], [1, 1], "KEY_UP into perimeter wall: no movement")
 	assert_eq(gs.get_cell_at(1, 1, 0).occupant, p, "player still on its own cell")
 
 	# --- Spuntoni: ingresso vietato anche se la cella è adiacente ---
 	_teleport(gs, p, 12, 5, 0)
-	_press(im, KEY_RIGHT)  # (13,5) è fossato con spuntoni a quota 0
+	_press(im, KEY_RIGHT)  # (13,5) è fossato con spuntoni a quota 0, move bloccato
 	assert_eq([p.grid_x, p.grid_y], [12, 5], "stepping onto spikes rejected")
 
 	# --- Il ponte a y=10 attraversa il fossato ---
 	_teleport(gs, p, 12, 10, 0)
+	_player_turn(tm)
 	_press(im, KEY_RIGHT)
 	assert_eq([p.grid_x, p.grid_y], [13, 10], "bridge crossing accepted")
 
