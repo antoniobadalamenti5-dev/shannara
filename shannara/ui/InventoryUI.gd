@@ -7,7 +7,6 @@ extends CanvasLayer
 
 signal inventory_opened()
 signal inventory_closed()
-signal inventory_needs_turn_commit()  # Emesso quando item used, inventory closes but turn not ended
 
 @export var panel_width: int = 320
 @export var panel_height: int = 240
@@ -15,14 +14,18 @@ signal inventory_needs_turn_commit()  # Emesso quando item used, inventory close
 var _inventory_system: Node = null
 var _is_open: bool = false
 
-var _background: ColorRect = null
-var _title_label: Label = null
-var _close_button: Button = null
+# Root centrato: tutti i figli usano anchor/offset relativi a questo rettangolo.
+# Mettere i Control direttamente sotto il CanvasLayer costringe a calcolare le
+# coordinate rispetto al viewport, ed è lì che la lista era collassata a
+# altezza zero (anchor_top 0.5 contro anchor_bottom 0).
+var _panel: Control = null
 var _items_list: VBoxContainer = null
 
 
 func _ready() -> void:
 	visible = false
+	# Aggiungi al gruppo per la gestione segnali
+	add_to_group("inventory_ui")
 	_inventory_system = get_node_or_null("/root/InventorySystem")
 	if _inventory_system == null:
 		push_error("[InventorySystem] InventorySystem singleton non trovato!")
@@ -30,60 +33,60 @@ func _ready() -> void:
 
 	_build_ui()
 	_connect_signals()
+	print("[InventoryUI] _ready() completato")
 
 
 func _build_ui() -> void:
-	# Background dark panel
-	_background = ColorRect.new()
-	_background.name = "Background"
-	_background.color = Color(0.1, 0.1, 0.15, 0.95)
-	_background.anchor_left = 0.5
-	_background.anchor_top = 0.5
-	_background.anchor_right = 0.5
-	_background.anchor_bottom = 0.5
-	_background.offset_left = -panel_width * 0.5
-	_background.offset_right = panel_width * 0.5
-	_background.offset_top = -panel_height * 0.5
-	_background.offset_bottom = panel_height * 0.5
-	add_child(_background)
+	# Pannello radice: 320x240 centrato sul viewport. Gli anchor 0.5 su tutti e
+	# quattro i lati con offset simmetrici danno un rettangolo di dimensione
+	# fissa indipendente dalla risoluzione della finestra.
+	_panel = Control.new()
+	_panel.name = "Panel"
+	_panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	_panel.anchor_left = 0.5
+	_panel.anchor_top = 0.5
+	_panel.anchor_right = 0.5
+	_panel.anchor_bottom = 0.5
+	_panel.offset_left = -panel_width * 0.5
+	_panel.offset_right = panel_width * 0.5
+	_panel.offset_top = -panel_height * 0.5
+	_panel.offset_bottom = panel_height * 0.5
+	add_child(_panel)
 
-	# Title label - positioned inside panel
-	_title_label = Label.new()
-	_title_label.name = "TitleLabel"
-	_title_label.text = "INVENTARIO"
-	_title_label.add_theme_font_size_override("font_size", 20)
-	_title_label.add_theme_color_override("font_color", Color(1, 1, 0.5))
-	_title_label.anchor_left = 0.5
-	_title_label.anchor_top = 0
-	_title_label.offset_left = -panel_width * 0.5 + 20
-	_title_label.offset_top = 12
-	_title_label.offset_right = panel_width * 0.5 - 20
-	_title_label.offset_bottom = 36
-	add_child(_title_label)
+	# Background scuro che copre l'intero pannello
+	var background := ColorRect.new()
+	background.name = "Background"
+	background.color = Color(0.1, 0.1, 0.15, 0.95)
+	background.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_panel.add_child(background)
 
-	# Items list container
+	# Titolo
+	var title_label := Label.new()
+	title_label.name = "TitleLabel"
+	title_label.text = "INVENTARIO"
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title_label.add_theme_font_size_override("font_size", 20)
+	title_label.add_theme_color_override("font_color", Color(1, 1, 0.5))
+	title_label.position = Vector2(0, 12)
+	title_label.size = Vector2(panel_width, 28)
+	_panel.add_child(title_label)
+
+	# Lista item: area centrale tra titolo e pulsante Chiudi
 	_items_list = VBoxContainer.new()
 	_items_list.name = "ItemsList"
-	_items_list.anchor_left = 0.5
-	_items_list.anchor_top = 0.5
-	_items_list.offset_left = -panel_width * 0.5 + 12
-	_items_list.offset_top = 60
-	_items_list.offset_right = panel_width * 0.5 - 12
-	_items_list.offset_bottom = panel_height * 0.5 - 60
-	add_child(_items_list)
+	_items_list.position = Vector2(16, 52)
+	_items_list.size = Vector2(panel_width - 32, panel_height - 52 - 60)
+	_items_list.add_theme_constant_override("separation", 8)
+	_panel.add_child(_items_list)
 
-	# Close button
-	_close_button = Button.new()
-	_close_button.name = "CloseButton"
-	_close_button.text = "Chiudi (I)"
-	_close_button.anchor_left = 0.5
-	_close_button.anchor_bottom = 1
-	_close_button.offset_left = -panel_width * 0.5 + 10
-	_close_button.offset_right = panel_width * 0.5 - 10
-	_close_button.offset_bottom = panel_height - 50
-	_close_button.offset_top = panel_height - 80
-	add_child(_close_button)
-	_close_button.pressed.connect(_on_close_pressed)
+	# Pulsante di chiusura ancorato in basso nel pannello
+	var close_button := Button.new()
+	close_button.name = "CloseButton"
+	close_button.text = "Chiudi (I)"
+	close_button.position = Vector2(12, panel_height - 48)
+	close_button.size = Vector2(panel_width - 24, 36)
+	close_button.pressed.connect(_on_close_pressed)
+	_panel.add_child(close_button)
 
 
 func _connect_signals() -> void:
@@ -98,8 +101,18 @@ func _connect_signals() -> void:
 		push_error("[InventoryUI] InputManager non trovato!")
 
 
-func _on_inventory_requested() -> void:
+# Public method to open inventory (called from GameManager)
+func open_inventory() -> void:
+	"""Open inventory programmatically. Does NOT consume turn."""
+	print("[InventoryUI] open_inventory() called, _is_open=%s" % _is_open)
 	if _is_open:
+		return
+	_open_inventory()
+
+func _on_inventory_requested() -> void:
+	print("[InventoryUI] _on_inventory_requested() CALLED, _is_open=%s" % _is_open)
+	if _is_open:
+		print("[InventoryUI] Inventory was open, calling _close_inventory() from _on_inventory_requested")
 		_close_inventory()
 	else:
 		_open_inventory()
@@ -109,33 +122,45 @@ func _open_inventory() -> void:
 	_is_open = true
 	visible = true
 	_refresh_items()
-	# Consuma il turno: aprire l'inventario è un'azione
 	var turn_manager = get_node_or_null("/root/TurnManager")
 	if turn_manager != null and turn_manager.is_player_turn():
-		turn_manager.consume_action()
-		# Blocca l'enemy turn finché l'inventory è aperto
+		# La pausa va settata PRIMA di consume_action(): consume_action emette
+		# action_consumed, GameManager la raccoglie in synchronia e chiama
+		# end_turn(). Se inventory_paused fosse ancora false, quel end_turn
+		# aprirebbe il turno nemico con la finestra ancora aperta.
 		turn_manager.inventory_paused = true
+		turn_manager.consume_action()
 		print("[InventoryUI] Turno consumato, inventory_paused=true")
 	inventory_opened.emit()
 	print("[InventoryUI] Inventario aperto - is_open=%s" % _is_open)
 
 
 func _close_inventory() -> void:
+	print("[InventoryUI] _close_inventory() CALLED! _is_open=%s" % _is_open)
+	if not _is_open:
+		print("[InventoryUI] WARN: _close_inventory() called but inventory not open - ignoring")
+		return
 	_is_open = false
 	visible = false
 	inventory_closed.emit()
-	# Rimuovi il blocco del turno
+	_release_turn()
+	print("[InventoryUI] Inventario chiuso")
+
+
+# Sblocca il turno che _open_inventory aveva messo in pausa.
+func _release_turn() -> void:
 	var turn_manager = get_node_or_null("/root/TurnManager")
-	if turn_manager != null:
-		turn_manager.inventory_paused = false
-		print("[InventoryUI] inventory_paused=false")
-		# Se l'utente ha aperto l'inventory e lo ha chiuso, il turno è finito
-		# (l'azione di apriura ha già consumato il turno)
-		turn_manager.call_deferred("end_turn")
-	print("[InventoryUI] Inventario chiuso - caller=%s" % get_stack()[0])
+	if turn_manager == null:
+		return
+	turn_manager.inventory_paused = false
+	# end_turn differito: _close_inventory può essere chiamata dall'interno di
+	# una callback di segnale, e avviare il turno nemico in quella pila
+	# rientrerebbe nel flusso dei segnali a iterazione in corso.
+	turn_manager.call_deferred("end_turn")
 
 
 func _on_close_pressed() -> void:
+	print("[InventoryUI] _on_close_pressed() CALLED - close button clicked")
 	_close_inventory()
 
 
@@ -183,23 +208,58 @@ func _refresh_items() -> void:
 		var use_btn = Button.new()
 		use_btn.text = "Usa"
 		use_btn.pressed.connect(_on_use_item.bind(item_id))
+		print("[InventoryUI] Created Use button for %s - signal connected" % item_id)
+		# Assicura che il pulsante possa ricevere l'input
+		use_btn.focus_mode = Control.FOCUS_ALL
 		row.add_child(use_btn)
 
 		_items_list.add_child(row)
 
 
 func _on_use_item(item_id: String) -> void:
+	print("[InventoryUI] _on_use_item() CALLED with item_id=%s" % item_id)
+	print("[InventoryUI] _is_open=%s, visible=%s" % [_is_open, visible])
 	if _inventory_system == null:
 		print("[InventoryUI] ERRORE: _inventory_system è null!")
 		return
 
-	print("[InventoryUI] Tentativo uso: %s" % item_id)
 	print("[InventoryUI] Item count: %d" % _inventory_system.get_item_count(item_id))
 
-	var success: bool = _inventory_system.use_item(item_id)
-	if success:
-		print("[InventoryUI] Usato con successo: %s" % item_id)
+	var result: Dictionary = _inventory_system.use_item(item_id)
+	print("[InventoryUI] Result: success=%s, message=%s, consumed=%s" % [result.success, result.message, result.consumed])
+	if result.success:
+		print("[InventoryUI] %s" % result.message)
 		_refresh_items()
-		_close_inventory()
+		if result.consumed:
+			print("[InventoryUI] Chiudo inventario dopo consumo")
+			_close_inventory()
 	else:
-		print("[InventoryUI] Impossibile usare: %s" % item_id)
+		print("[InventoryUI] Impossibile usare %s: %s" % [item_id, result.message])
+		# Mostra messaggio di stato
+		_show_status_message(result.message)
+
+
+func _show_status_message(message: String) -> void:
+	"""Mostra un messaggio temporaneo nell'inventario quando l'azione fallisce."""
+	var status_label = Label.new()
+	status_label.text = message
+	status_label.add_theme_color_override("font_color", Color(1, 0.5, 0.5))
+	status_label.add_theme_font_size_override("font_size", 14)
+	status_label.anchor_left = 0.5
+	status_label.anchor_bottom = 0
+	status_label.offset_left = -panel_width * 0.5 + 20
+	status_label.offset_bottom = 180
+	status_label.offset_top = 160
+	status_label.offset_right = panel_width * 0.5 - 20
+	_items_list.add_child(status_label)
+
+	# Rimuovi il messaggio dopo 2 secondi
+	var timer := Timer.new()
+	timer.one_shot = true
+	timer.wait_time = 2.0
+	timer.autostart = true
+	timer.timeout.connect(func():
+		status_label.queue_free()
+		timer.queue_free()
+	)
+	_items_list.add_child(timer)

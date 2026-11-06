@@ -70,7 +70,9 @@ func _on_elevation_requested(delta_elev: int) -> void:
 		_set_message("Quota non raggiungibile")
 
 func _on_inventory_requested() -> void:
-	_set_message("Inventario: non ancora implementato")
+	_set_message("Inventario richiesto")
+	# Il segnale inventory_requested è gestito direttamente da InventoryUI
+	# qui mappiamo solo il messaggio
 
 func _on_biome_transition_requested() -> void:
 	_set_message("Transizione bioma: non ancora implementata")

@@ -17,6 +17,7 @@ const TESTS: Array = [
 	{"file": "res://tests/test_combat.gd", "name": "Combat", "phase": "phase4"},
 	{"file": "res://tests/test_combat_flow.gd", "name": "CombatFlow", "phase": "phase4"},
 	{"file": "res://tests/test_inventory.gd", "name": "Inventory", "phase": "phase5"},
+	{"file": "res://tests/test_inventory_ui.gd", "name": "InventoryUI", "phase": "phase5"},
 	{"file": "res://tests/test_biome.gd", "name": "Biome", "phase": "phase6"},
 	{"file": "res://tests/test_combat_integration.gd", "name": "CombatIntegration", "phase": "phase4"},
 ]

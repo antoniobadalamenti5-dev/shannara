@@ -32,7 +32,7 @@ func register_player(p: Node) -> void:
 	player = p
 
 func start_player_turn() -> void:
-	print("[TurnManager] start_player_turn() - changing from state %s to PLAYER_TURN" % current_state)
+	print("[TurnManager] start_player_turn() - changing from state %s to PLAYER_TURN, inventory_paused=%s" % [current_state, inventory_paused])
 	current_state = TurnState.PLAYER_TURN
 	turn_start.emit(TurnState.PLAYER_TURN)
 
