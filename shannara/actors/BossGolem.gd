@@ -67,6 +67,9 @@ func take_damage(amount: int) -> void:
 func heal(amount: int) -> void:
 	current_hp = min(max_hp, current_hp + abs(amount))
 
+func is_connected_to_grid() -> bool:
+	return true
+
 # --- Attack System ---
 func get_attack_damage() -> int:
 	"""Return attack damage based on current phase."""
