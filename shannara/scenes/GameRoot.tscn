@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=4 uid="game_root_2024"]
+[gd_scene load_steps=5 format=4 uid="game_root_2024"]
 
 [ext_resource path="res://scenes/GameRoot.gd" type="Script" id=1]
 [ext_resource path="res://utils/GridRenderer.gd" type="Script" id=2]
 [ext_resource path="res://scenes/Player.tscn" type="PackedScene" id=3]
+[ext_resource path="res://scenes/InventoryUI.tscn" type="PackedScene" id=4]
 
 [node name="GameRoot" type="Node2D"]
 script = ExtResource( 1 )
@@ -16,3 +17,5 @@ script = ExtResource( 2 )
 mode = 0
 position = Vector2(320, 320)
 zoom = Vector2(1.2, 1.2)
+
+[node name="InventoryUI" parent="." instance=ExtResource( 2 )]

@@ -1,0 +1,8 @@
+[gd_scene format=4 uid="inventory_ui_2024"]
+
+[ext_resource path="res://ui/InventoryUI.gd" type="Script" id=1]
+
+[node name="InventoryUI" type="CanvasLayer"]
+script = ExtResource( 1 )
+panel_width = 320
+panel_height = 240
