@@ -2,5 +2,8 @@
 .godot/
 /android/
 
+# Exported builds (Shannara.exe + .pck, ~110MB)
+/build/
+
 # Godot 4.4+ UID files for nodes (generated, not source)
 **/*.uid
