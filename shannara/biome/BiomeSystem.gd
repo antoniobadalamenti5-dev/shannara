@@ -52,12 +52,53 @@ func load_biome_map(biome: int) -> void:
 	push_warning("load_biome_map non completato - vedi Fase 7")
 
 func generate_biome_map(biome: int) -> Dictionary:
+	"""Return biome data with enemy and item spawn definitions."""
+	var enemies: Array = []
+	var items: Array = []
+
+	match biome:
+		BiomeType.FOREST:
+			# 1 Slime + 1 BossGolem (boss fight)
+			enemies = [
+				{"type": "Slime", "grid_x": 8, "grid_y": 5, "grid_elevation": 0},
+				{"type": "BossGolem", "grid_x": 15, "grid_y": 10, "grid_elevation": 0}
+			]
+			items = [
+				{"type": "healing_potion", "grid_x": 6, "grid_y": 8, "grid_elevation": 0}
+			]
+		BiomeType.CAVE:
+			enemies = [
+				{"type": "Slime", "grid_x": 5, "grid_y": 8, "grid_elevation": 0},
+				{"type": "Slime", "grid_x": 12, "grid_y": 12, "grid_elevation": 0}
+			]
+		BiomeType.DESERT:
+			enemies = [
+				{"type": "Slime", "grid_x": 3, "grid_y": 6, "grid_elevation": 0},
+				{"type": "Slime", "grid_x": 10, "grid_y": 10, "grid_elevation": 0},
+				{"type": "Slime", "grid_x": 17, "grid_y": 14, "grid_elevation": 0}
+			]
+		BiomeType.ICE:
+			enemies = [
+				{"type": "Slime", "grid_x": 6, "grid_y": 10, "grid_elevation": 0},
+				{"type": "Slime", "grid_x": 14, "grid_y": 10, "grid_elevation": 0}
+			]
+		BiomeType.SWAMP:
+			enemies = [
+				{"type": "Slime", "grid_x": 4, "grid_y": 9, "grid_elevation": 0},
+				{"type": "Slime", "grid_x": 9, "grid_y": 14, "grid_elevation": 0},
+				{"type": "Slime", "grid_x": 16, "grid_y": 9, "grid_elevation": 0}
+			]
+		_:
+			enemies = [
+				{"type": "Slime", "grid_x": 8, "grid_y": 5, "grid_elevation": 0}
+			]
+
 	return {
 		"biome_type": biome,
 		"width": 20,
 		"height": 20,
-		"enemies": [],
-		"items": []
+		"enemies": enemies,
+		"items": items
 	}
 
 func get_biome_multiplier() -> float:

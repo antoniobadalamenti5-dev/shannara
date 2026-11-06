@@ -80,24 +80,60 @@ func StartGame() -> bool:
 	return true
 
 func _spawn_initial_encounters() -> void:
+	"""Spawn enemies and items defined by the current biome map."""
 	if biome_system == null:
 		return
-	var biome: int = biome_system.current_biome
-	var enemy_count: int = 1
-	match biome:
-		0:  # FOREST
-			enemy_count = 1
-		1:  # CAVE
-			enemy_count = 2
-		2:  # DESERT
-			enemy_count = 3
-		3:  # ICE
-			enemy_count = 2
-		4:  # SWAMP
-			enemy_count = 3
-		_:
-			enemy_count = 2
-	emit_signal("combat_encounter", "Slime", enemy_count)
+
+	var biome_data: Dictionary = biome_system.generate_biome_map(biome_system.current_biome)
+	var enemy_defs: Array = biome_data.get("enemies", [])
+	var item_defs: Array = biome_data.get("items", [])
+
+	var enemy_type_counts: Dictionary = {}
+	for ed in enemy_defs:
+		var enemy_type: String = ed.get("type", "Slime")
+		enemy_type_counts[enemy_type] = enemy_type_counts.get(enemy_type, 0) + 1
+
+	for enemy_type in enemy_type_counts:
+		emit_signal("combat_encounter", enemy_type, enemy_type_counts[enemy_type])
+
+	# Spawn enemies into the scene
+	var enemy_scenes: Dictionary = {
+		"Slime": "res://scenes/Slime.tscn",
+		"BossGolem": "res://scenes/BossGolem.tscn"
+	}
+	for ed in enemy_defs:
+		var enemy_type: String = ed.get("type", "Slime")
+		var scene_path: String = enemy_scenes.get(enemy_type, "")
+		if scene_path.is_empty():
+			push_error("[GameManager] Unknown enemy type: %s" % enemy_type)
+			continue
+		var scene = load(scene_path)
+		if scene == null:
+			push_error("[GameManager] Could not load enemy scene: %s" % scene_path)
+			continue
+		var enemy = scene.instantiate()
+		enemy.grid_x = ed.get("grid_x", 8)
+		enemy.grid_y = ed.get("grid_y", 5)
+		enemy.grid_elevation = ed.get("grid_elevation", 0)
+		enemy.position = Vector2((enemy.grid_x + 0.5) * 32, (enemy.grid_y + 0.5) * 32)
+		add_child(enemy)
+
+		var grid_system = get_tree().root.get_node_or_null("/root/GridSystem")
+		if grid_system != null:
+			grid_system.set_occupant(enemy.grid_x, enemy.grid_y, enemy.grid_elevation, enemy)
+
+	# Spawn items into the scene
+	for id in item_defs:
+		var item_type: String = id.get("type", "")
+		if item_type == "healing_potion":
+			var potion_scene = load("res://scenes/HealingPotion.tscn")
+			if potion_scene != null:
+				var potion = potion_scene.instantiate()
+				potion.grid_x = id.get("grid_x", 6)
+				potion.grid_y = id.get("grid_y", 8)
+				potion.grid_elevation = id.get("grid_elevation", 0)
+				potion.position = Vector2((potion.grid_x + 0.5) * 32, (potion.grid_y + 0.5) * 32)
+				add_child(potion)
 
 func ProcessPlayerAction(action_type: String, dx: int = 0, dy: int = 0) -> Dictionary:
 	var result: Dictionary = {
