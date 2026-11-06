@@ -2,8 +2,8 @@
 # Enemy character with 50 HP, can act during enemy turn
 # Basic AI with patrol points and hunt behavior
 
-class_name Enemy
 extends Node2D
+class_name Enemy
 
 enum EnemyState { IDLE, PATROL, HUNT, ATTACK }
 
@@ -69,14 +69,17 @@ func take_action(target_x: int, target_y: int) -> bool:
 
 func _attack_player() -> bool:
 	"""Attack the player if adjacent."""
+	print("[Enemy] _attack_player() - player.is_alive=%s" % (player != null and player.is_alive()))
 	var tm = get_node("/root/TurnManager")
 	var player = tm.player
 	if player == null or not player.is_alive():
 		return false
 	var cr = get_node("/root/CombatResolver")
 	var result = cr.resolve_attack(self, player)
+	print("[Enemy] Risultato attacco: success=%s, damage=%s" % [result.success, result.damage])
 	if result.success:
-		tm.consume_action()
+		# NOTA: non si chiama consume_action() qui. Il turno nemico finisce
+		# con end_turn() in TurnManager._process_enemy_turn().
 		return true
 	return false
 
@@ -92,8 +95,8 @@ func _hunt_action(target_x: int, target_y: int) -> bool:
 		var next_pos = path[1]
 		var success = _attempt_move(next_pos[0], next_pos[1], next_pos[2])
 		if success:
-			var tm = get_node("/root/TurnManager")
-			tm.consume_action()
+			# NOTA: non si chiama consume_action() qui. Il turno nemico finisce
+			# con end_turn() in TurnManager._process_enemy_turn().
 			return true
 	return false
 
@@ -115,8 +118,8 @@ func _patrol_action() -> bool:
 	var target = patrol_points[patrol_index]
 	var success = _attempt_move(target[0], target[1], target[2])
 	if success:
-		var tm = get_node("/root/TurnManager")
-		tm.consume_action()
+		# NOTA: non si chiama consume_action() qui. Il turno nemico finisce
+		# con end_turn() in TurnManager._process_enemy_turn().
 		patrol_index = (patrol_index + 1) % patrol_points.size()
 		return true
 	return false
@@ -133,6 +136,9 @@ func _attempt_move(target_x: int, target_y: int, target_elev: int) -> bool:
 	grid_y = target_y
 	grid_elevation = target_elev
 	grid_system.set_occupant(target_x, target_y, target_elev, self)
+	# Aggiorna la posizione visiva (ereditata da classi figlie come Slime)
+	if is_instance_valid(self):
+		position = Vector2((grid_x + 0.5) * 32, (grid_y + 0.5) * 32)
 	return true
 
 func get_attack_damage() -> int:

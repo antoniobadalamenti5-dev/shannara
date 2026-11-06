@@ -7,15 +7,15 @@ extends Node2D
 
 class_name Slime
 
-# --- Enemy State Enum ---
+# ---Enemy State Enum---
 enum EnemyState { IDLE, PATROL, HUNT, ATTACK }
 
-# --- State Management ---
+# ---State Management---
 var state: int = EnemyState.IDLE
 var patrol_points: Array = []
 var patrol_index: int = 0
 
-# --- HP and Position ---
+# ---HP and Position---
 var max_hp: int = 20
 var current_hp: int = 20
 var grid_x: int = 10
@@ -47,7 +47,7 @@ func heal(amount: int) -> void:
 func is_connected_to_grid() -> bool:
 	return true
 
-# --- Turn-based Actions ---
+# ---Turn-based Actions---
 func can_act() -> bool:
 	var tm = get_node("/root/TurnManager")
 	if tm == null:
@@ -80,8 +80,6 @@ func take_action(target_x: int, target_y: int) -> bool:
 	print("[Slime] state=%s, distanza al player=%s" % [state_name, abs(grid_x - target_x) + abs(grid_y - target_y)])
 
 	# Attack if adjacent to player
-	var turn_manager = get_node("/root/TurnManager")
-	var player = turn_manager.player
 	if player != null and player.is_alive():
 		var distance: int = abs(grid_x - player.grid_x) + abs(grid_y - player.grid_y)
 		if distance <= 1 and grid_elevation == player.grid_elevation:
@@ -210,4 +208,6 @@ func _attempt_move(target_x: int, target_y: int, target_elev: int) -> bool:
 	grid_y = target_y
 	grid_elevation = target_elev
 	grid_system.set_occupant(target_x, target_y, target_elev, self)
+	# Aggiorna la posizione visiva dello sprite
+	position = Vector2((grid_x + 0.5) * 32, (grid_y + 0.5) * 32)
 	return true
