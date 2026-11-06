@@ -112,8 +112,9 @@ func _open_inventory() -> void:
 	var turn_manager = get_node_or_null("/root/TurnManager")
 	if turn_manager != null and turn_manager.is_player_turn():
 		turn_manager.consume_action()
+		print("[InventoryUI] Turno consumato (inventario aperto)")
 	inventory_opened.emit()
-	print("[InventoryUI] Inventario aperto")
+	print("[InventoryUI] Inventario aperto - is_open=%s" % _is_open)
 
 
 func _close_inventory() -> void:
@@ -128,14 +129,17 @@ func _on_close_pressed() -> void:
 
 
 func _refresh_items() -> void:
+	print("[InventoryUI] Refresh items - visible=%s" % visible)
 	# Pulisci i figli esistenti
 	for child in _items_list.get_children():
 		child.queue_free()
 
 	if _inventory_system == null:
+		print("[InventoryUI] ERRORE: refresh con _inventory_system null!")
 		return
 
 	var items: Dictionary = _inventory_system.active_items
+	print("[InventoryUI] Item count: %d" % items.size())
 	if items.is_empty():
 		var empty_label = Label.new()
 		empty_label.text = "Inventario vuoto"
@@ -175,10 +179,16 @@ func _refresh_items() -> void:
 
 func _on_use_item(item_id: String) -> void:
 	if _inventory_system == null:
+		print("[InventoryUI] ERRORE: _inventory_system è null!")
 		return
+
+	print("[InventoryUI] Tentativo uso: %s" % item_id)
+	print("[InventoryUI] Item count: %d" % _inventory_system.get_item_count(item_id))
+
 	var success: bool = _inventory_system.use_item(item_id)
 	if success:
-		print("[InventoryUI] Usato: %s" % item_id)
+		print("[InventoryUI] Usato con successo: %s" % item_id)
 		_refresh_items()
+		_close_inventory()
 	else:
 		print("[InventoryUI] Impossibile usare: %s" % item_id)
