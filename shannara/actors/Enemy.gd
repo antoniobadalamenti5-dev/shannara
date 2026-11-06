@@ -26,6 +26,12 @@ func is_alive() -> bool:
 
 func take_damage(amount: int) -> void:
 	current_hp = max(0, current_hp - abs(amount))
+	if current_hp <= 0:
+		# Rimuovi dalla griglia e distruggi il nemico
+		var gs = get_node("/root/GridSystem")
+		if gs != null:
+			gs.set_occupant(grid_x, grid_y, grid_elevation, null)
+		queue_free()
 
 func heal(amount: int) -> void:
 	current_hp = min(max_hp, current_hp + abs(amount))
