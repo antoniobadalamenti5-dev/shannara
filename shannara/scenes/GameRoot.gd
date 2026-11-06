@@ -21,6 +21,13 @@ func _ready() -> void:
 	_add_turn_label()
 	_add_camera()
 	_connect_input()
+	_spawn_initial_enemy()
+	print("[GameRoot] _game_manager = %s" % _game_manager)
+	if _game_manager != null:
+		print("[GameRoot] Chiamo StartGame()")
+		_game_manager.StartGame()
+	else:
+		print("[GameRoot] ERRORE: _game_manager è null!")
 
 func _connect_input() -> void:
 	_input_manager = get_node_or_null("/root/InputManager")
@@ -119,6 +126,7 @@ func _turn_text() -> String:
 		return "Turno: -"
 	var who: String = "Player" if tm.is_player_turn() else "Nemici"
 	var lines: Array[String] = ["Turno %d - %s" % [tm.turn_count, who]]
+	lines.append("F: mira | frecce/WASD: muovi e mira | F/Spazio: attacca")
 	var p := _current_player()
 	if p != null:
 		lines.append("cella %d,%d quota %+d" % [p.grid_x, p.grid_y, p.grid_elevation])
@@ -129,3 +137,20 @@ func _turn_text() -> String:
 func _process(_delta: float) -> void:
 	if _turn_label != null:
 		_turn_label.text = _turn_text()
+
+# Spawn iniziale: un nemico (Slime) a sinistra del player.
+# Player spawn a (5,5), Slime a (12,5) = distanza 7.
+# Dopo il primo movimento del player a destra, la distanza cala e lo Slime inizia HUNT.
+func _spawn_initial_enemy() -> void:
+	var slime_scene = preload("res://scenes/Slime.tscn")
+	var slime: Slime = slime_scene.instantiate()
+	slime.grid_x = 12  # Lontano dal player, inizialmente IDLE o PATROL
+	slime.grid_y = 5
+	slime.grid_elevation = 0
+	slime.position = Vector2((slime.grid_x + 0.5) * TILE_SIZE, (slime.grid_y + 0.5) * TILE_SIZE)
+	add_child(slime)
+
+	# Registra l'occupazione della griglia
+	var gs = get_node("/root/GridSystem")
+	gs.set_occupant(slime.grid_x, slime.grid_y, slime.grid_elevation, slime)
+	print("[GameRoot] Slime spawnato a (%d, %d, %d)" % [slime.grid_x, slime.grid_y, slime.grid_elevation])
