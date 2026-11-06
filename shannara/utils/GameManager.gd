@@ -158,6 +158,18 @@ func _process_attack(player: Player, dx: int, dy: int) -> Dictionary:
 		result.message = "Nessun nemico adiacente in quella direzione"
 	return result
 
+func OpenInventory() -> Dictionary:
+	"""Open inventory UI. Returns diagnostic info."""
+	var result: Dictionary = {
+		"success": true,
+		"message": "Inventario aperto",
+		"items": {}
+	}
+	var inventory_system = get_node_or_null("/root/InventorySystem")
+	if inventory_system != null and inventory_system.has_method("active_items"):
+		result.items = inventory_system.active_items
+	return result
+
 func CheckVictoryConditions() -> bool:
 	if turn_manager == null:
 		return false

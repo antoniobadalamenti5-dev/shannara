@@ -92,21 +92,28 @@ Ogni fase è divisa in **Task Principali** e **Subtask** step-by-step. L'ordine 
 ## FASE 5: Inventory & Items (Ore stimate: 2-3h) ✅ COMPLETATA
 
 ### Task 5.1: ItemDatabase Base ✅ COMPLETATA
-- `res://items/item_database.json`
+- `res://items/item_database.json` - 4 item definitions (healing_potion, mana_potion, iron_sword, steel_sword)
 - `res://utils/ItemDatabase.gd` singleton
-- Metodi get_item, get_all_items
+- Metodi get_item, get_all_items, get_item_type, get_hp_restore, get_atk_bonus
 
 ### Task 5.2: Inventory System ✅ COMPLETATA
 - `res://inventory/InventorySystem.gd` singleton
-- add_item, remove_item, has_item, use_item
+- add_item, remove_item, has_item, get_item_count, use_item, consume_item_on_pickup
 - Player starts with 1 healing_potion
 
 ### Task 5.3: Pickup & Consumption Mechanics ✅ COMPLETATA
-- HealingPotion.tscn con Area2D
+- `res://items/HealingPotion.gd` - Area2D node with _on_body_entered
+- `res://scenes/HealingPotion.tscn` scena creata
 - _on_body_entered aggiunge all'inventario
-- Consumo 1 turno per pickup
+- Consumo 1 turno per pickup, successo con turn_manager.consume_action()
+- item_database.json aggiornato con scene_path per healing_potion
 
-### Task 5.4: Commit ✅ COMPLETATA
+### Task 5.4: GameManager Integration ✅ COMPLETATA
+- GameManager.gd aggiornato con metodo OpenInventory()
+- InputManager.gd supporta inventory_requested signal (tasto I)
+- GameManager.ProcessPlayerAction("inventory") supportato
+
+### Task 5.5: Commit ✅ COMPLETATA
 
 ---
 

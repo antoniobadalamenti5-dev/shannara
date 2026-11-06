@@ -4,7 +4,8 @@
             "name": "Pozione Curativa",
             "type": "consumable",
             "hp_restore": 20,
-            "description": "Ripristina 20 punti vita"
+            "description": "Ripristina 20 punti vita",
+            "scene_path": "res://scenes/HealingPotion.tscn"
         },
         "mana_potion": {
             "name": "Pozione Mana",
