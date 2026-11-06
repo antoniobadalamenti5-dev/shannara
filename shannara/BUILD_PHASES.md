@@ -123,17 +123,23 @@ Ogni fase è divisa in **Task Principali** e **Subtask** step-by-step. L'ordine 
 - `res://actors/Slime.gd` - Nemico base con HP 20, attacco 3
 - State machine: IDLE, PATROL, HUNT, ATTACK
 - Detection range 3 tiles per HUNT
+- `_attempt_move()` sincronizza posizione visiva
+- `take_damage()` chiama `queue_free()` alla morte
 
 ### Task 6.2: Boss Fight Minima (1^ Bioma) ✅ COMPLETATA
 - `res://actors/BossGolem.gd` - Boss con 3 fasi (HP 50, 26, 15)
 - Fase 1: attacco 5, velocità 1.0
 - Fase 2: attacco 8, velocità 1.2
 - Fase 3: attacco 12, velocità 1.4
+- Aggiunte `_attempt_move()` con sync posizione visiva
+- Aggiunta `take_damage()` con death cleanup e grid cleanup
+- Aggiunto `can_attack()` per verifica adiacenza
 
 ### Task 6.3: Bioma Transition ✅ COMPLETATA
 - `res://biome/BiomeSystem.gd` singleton
 - Enum BiomeType: FOREST, CAVE, DESERT, ICE, SWAMP
 - Metodi per transizione e generazione mappa
+- `transition_to_next_biome()` e `load_biome_map()` implementati
 
 ### Task 6.4: Commit ✅ COMPLETATA
 

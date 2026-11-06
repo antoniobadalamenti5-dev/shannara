@@ -57,6 +57,12 @@ func is_alive() -> bool:
 func take_damage(amount: int) -> void:
 	current_hp = max(0, current_hp - abs(amount))
 	_update_phase()
+	if current_hp <= 0:
+		# Rimuovi dalla griglia e distruggi il nemico
+		var gs = get_node("/root/GridSystem")
+		if gs != null:
+			gs.set_occupant(grid_x, grid_y, grid_elevation, null)
+		queue_free()
 
 func heal(amount: int) -> void:
 	current_hp = min(max_hp, current_hp + abs(amount))
@@ -89,6 +95,17 @@ func can_act() -> bool:
 	if tm == null:
 		return false
 	return is_alive() and tm.current_state == 1  # ENEMY_TURN = 1
+
+func can_attack() -> bool:
+	"""Check if we can attack the player (adjacent)."""
+	var tm = get_node("/root/TurnManager")
+	if tm == null or not is_alive():
+		return false
+	var player = tm.player
+	if player == null or not player.is_alive():
+		return false
+	var distance = abs(grid_x - player.grid_x) + abs(grid_y - player.grid_y)
+	return distance <= 1 and grid_elevation == player.grid_elevation
 
 # --- Turn-based Actions ---
 func take_action(target_x: int, target_y: int) -> bool:
@@ -180,4 +197,7 @@ func _attempt_move(target_x: int, target_y: int, target_elev: int) -> bool:
 	grid_y = target_y
 	grid_elevation = target_elev
 	grid_system.set_occupant(target_x, target_y, target_elev, self)
+	# Aggiorna la posizione visiva dello sprite
+	if is_instance_valid(self):
+		position = Vector2((grid_x + 0.5) * 32, (grid_y + 0.5) * 32)
 	return true
