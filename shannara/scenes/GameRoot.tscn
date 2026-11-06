@@ -18,4 +18,4 @@ mode = 0
 position = Vector2(320, 320)
 zoom = Vector2(1.2, 1.2)
 
-[node name="InventoryUI" parent="." instance=ExtResource( 2 )]
+[node name="InventoryUI" parent="." instance=ExtResource( 4 )]

@@ -14,10 +14,10 @@ signal inventory_closed()
 var _inventory_system: Node = null
 var _is_open: bool = false
 
-var _panel_container: PanelContainer = null
+var _background: ColorRect = null
 var _title_label: Label = null
 var _close_button: Button = null
-var _items_grid: GridContainer = null
+var _items_list: VBoxContainer = null
 
 
 func _ready() -> void:
@@ -32,51 +32,56 @@ func _ready() -> void:
 
 
 func _build_ui() -> void:
-	# Panel container - centered with background
-	_panel_container = PanelContainer.new()
-	_panel_container.name = "InventoryPanel"
-	_panel_container.anchor_left = 0.5
-	_panel_container.anchor_top = 0.5
-	_panel_container.anchor_right = 0.5
-	_panel_container.anchor_bottom = 0.5
-	_panel_container.offset_left = -panel_width * 0.5
-	_panel_container.offset_right = panel_width * 0.5
-	_panel_container.offset_top = -panel_height * 0.5
-	_panel_container.offset_bottom = panel_height * 0.5
-	_panel_container.modulate = Color(0.1, 0.1, 0.15, 0.95)
-	add_child(_panel_container)
+	# Background dark panel
+	_background = ColorRect.new()
+	_background.name = "Background"
+	_background.color = Color(0.1, 0.1, 0.15, 0.95)
+	_background.anchor_left = 0.5
+	_background.anchor_top = 0.5
+	_background.anchor_right = 0.5
+	_background.anchor_bottom = 0.5
+	_background.offset_left = -panel_width * 0.5
+	_background.offset_right = panel_width * 0.5
+	_background.offset_top = -panel_height * 0.5
+	_background.offset_bottom = panel_height * 0.5
+	add_child(_background)
 
-	# Layout container inside the panel
-	var vbox = VBoxContainer.new()
-	vbox.setanchors(PRESET_TOP_WIDE)
-	vbox.content_margin_top = 10
-	vbox.content_margin_bottom = 10
-	vbox.content_margin_left = 10
-	vbox.content_margin_right = 10
-	_panel_container.add_child(vbox)
-
-	# Title
+	# Title label - positioned inside panel
 	_title_label = Label.new()
 	_title_label.name = "TitleLabel"
 	_title_label.text = "INVENTARIO"
-	_title_label.custom_fonts.font = load("res://fonts/DejaVuSans.ttf") if FileAccess.file_exists("res://fonts/DejaVuSans.ttf") else null
-	_title_label.add_theme_font_size_override("font_size", 24)
+	_title_label.add_theme_font_size_override("font_size", 20)
 	_title_label.add_theme_color_override("font_color", Color(1, 1, 0.5))
-	_title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	vbox.add_child(_title_label)
+	_title_label.anchor_left = 0.5
+	_title_label.anchor_top = 0
+	_title_label.offset_left = -panel_width * 0.5 + 20
+	_title_label.offset_top = 12
+	_title_label.offset_right = panel_width * 0.5 - 20
+	_title_label.offset_bottom = 36
+	add_child(_title_label)
 
-	# Items grid
-	_items_grid = GridContainer.new()
-	_items_grid.name = "ItemsGrid"
-	_items_grid.columns = 2
-	_items_grid.custom_constants.separation = 8
-	vbox.add_child(_items_grid)
+	# Items list container
+	_items_list = VBoxContainer.new()
+	_items_list.name = "ItemsList"
+	_items_list.anchor_left = 0.5
+	_items_list.anchor_top = 0.5
+	_items_list.offset_left = -panel_width * 0.5 + 12
+	_items_list.offset_top = 60
+	_items_list.offset_right = panel_width * 0.5 - 12
+	_items_list.offset_bottom = panel_height * 0.5 - 60
+	add_child(_items_list)
 
 	# Close button
 	_close_button = Button.new()
 	_close_button.name = "CloseButton"
 	_close_button.text = "Chiudi (I)"
-	vbox.add_child(_close_button)
+	_close_button.anchor_left = 0.5
+	_close_button.anchor_bottom = 1
+	_close_button.offset_left = -panel_width * 0.5 + 10
+	_close_button.offset_right = panel_width * 0.5 - 10
+	_close_button.offset_bottom = panel_height - 50
+	_close_button.offset_top = panel_height - 80
+	add_child(_close_button)
 	_close_button.pressed.connect(_on_close_pressed)
 
 
@@ -124,7 +129,7 @@ func _on_close_pressed() -> void:
 
 func _refresh_items() -> void:
 	# Pulisci i figli esistenti
-	for child in _items_grid.get_children():
+	for child in _items_list.get_children():
 		child.queue_free()
 
 	if _inventory_system == null:
@@ -135,23 +140,8 @@ func _refresh_items() -> void:
 		var empty_label = Label.new()
 		empty_label.text = "Inventario vuoto"
 		empty_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
-		_items_grid.add_child(empty_label)
+		_items_list.add_child(empty_label)
 		return
-
-	# Header row come HBox
-	var header = HBoxContainer.new()
-	var header_name = Label.new()
-	header_name.text = "Item"
-	header_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header_name.add_theme_color_override("font_color", Color(0.8, 0.8, 0.4))
-	header.add_child(header_name)
-
-	var header_count = Label.new()
-	header_count.text = "Qty"
-	header_count.add_theme_color_override("font_color", Color(0.8, 0.8, 0.4))
-	header.add_child(header_count)
-
-	_items_grid.add_child(header)
 
 	for item_id in items.keys():
 		var item_count: int = items[item_id]
@@ -180,7 +170,7 @@ func _refresh_items() -> void:
 		use_btn.pressed.connect(_on_use_item.bind(item_id))
 		row.add_child(use_btn)
 
-		_items_grid.add_child(row)
+		_items_list.add_child(row)
 
 
 func _on_use_item(item_id: String) -> void:
