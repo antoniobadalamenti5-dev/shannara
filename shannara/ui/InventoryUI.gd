@@ -21,7 +21,7 @@ var _close_button: Button = null
 
 
 func _ready() -> void:
-	hide()
+	visible = false
 	_inventory_system = get_node_or_null("/root/InventorySystem")
 	if _inventory_system == null:
 		push_error("[InventorySystem] InventorySystem singleton non trovato!")
@@ -29,14 +29,14 @@ func _ready() -> void:
 
 	_build_ui()
 	_connect_signals()
-	_refresh_items()
 
 
 func _build_ui() -> void:
 	# Panel container
 	_panel = Panel.new()
 	_panel.name = "InventoryPanel"
-	_panel.set_anchors_preset(Control.PRESET_CENTER)
+	_panel.anchor_right = 0.5
+	_panel.anchor_bottom = 0.5
 	_panel.offset_left = -panel_width / 2
 	_panel.offset_right = panel_width / 2
 	_panel.offset_top = -panel_height / 2
@@ -50,26 +50,37 @@ func _build_ui() -> void:
 	_title_label.text = "INVENTARIO"
 	_title_label.add_theme_font_size_override("font_size", 24)
 	_title_label.add_theme_color_override("font_color", Color(1, 1, 0.5))
-	_title_label.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	_title_label.position = Vector2(0, 12)
-	_title_label.alignment = HORIZONTAL_CENTER
+	_title_label.anchor_right = 0.5
+	_title_label.anchor_bottom = 0
+	_title_label.offset_left = 0
+	_title_label.offset_right = 0
+	_title_label.offset_top = 12
+	_title_label.offset_bottom = 36
+	_title_label.autowrap_enabled = true
+	_title_label.x_align_mode = Label.X_ALIGN_CENTER
 	_panel.add_child(_title_label)
 
 	# Items container
 	_items_container = VBoxContainer.new()
 	_items_container.name = "ItemsContainer"
-	_items_container.set_anchors_preset(Control.PRESET_CENTER)
-	_items_container.position = Vector2(0, 60)
-	_items_container.size = Vector2(panel_width - 40, panel_height - 120)
+	_items_container.anchor_left = 0.5
+	_items_container.anchor_top = 0.5
+	_items_container.offset_left = -panel_width / 2 + 20
+	_items_container.offset_top = 60
+	_items_container.offset_right = panel_width / 2 - 20
+	_items_container.offset_bottom = panel_height - 130
 	_panel.add_child(_items_container)
 
 	# Close button
 	_close_button = Button.new()
 	_close_button.name = "CloseButton"
 	_close_button.text = "Chiudi (I)"
-	_close_button.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	_close_button.position = Vector2(0, panel_height - 50)
-	_close_button.size = Vector2(panel_width, 40)
+	_close_button.anchor_left = 0.5
+	_close_button.anchor_bottom = 1
+	_close_button.offset_left = -panel_width / 2 + 10
+	_close_button.offset_right = panel_width / 2 - 10
+	_close_button.offset_bottom = panel_height - 50
+	_close_button.size = Vector2(panel_width - 20, 40)
 	_close_button.pressed.connect(_on_close_pressed)
 	_panel.add_child(_close_button)
 
@@ -126,7 +137,11 @@ func _refresh_items() -> void:
 		var empty_label = Label.new()
 		empty_label.text = "Inventario vuoto"
 		empty_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
-		empty_label.set_anchors_preset(Control.PRESET_CENTER)
+		empty_label.anchor_left = 0.5
+		empty_label.anchor_top = 0.5
+		empty_label.offset_left = 0
+		empty_label.offset_top = 0
+		empty_label.x_align_mode = Label.X_ALIGN_CENTER
 		_items_container.add_child(empty_label)
 		return
 
@@ -134,6 +149,8 @@ func _refresh_items() -> void:
 	var header = Label.new()
 	header.text = "Item                Quantità"
 	header.add_theme_color_override("font_color", Color(0.8, 0.8, 0.4))
+	header.autowrap_enabled = true
+	header.x_align_mode = Label.X_ALIGN_CENTER
 	_items_container.add_child(header)
 
 	for item_id in items.keys():
