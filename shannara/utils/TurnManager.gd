@@ -9,11 +9,13 @@ var current_state: int = TurnState.PLAYER_TURN
 var turn_count: int = 0
 var grid_system: Node = null
 var player: Node = null
+var inventory_paused: bool = false  # When true, blocks enemy turn from starting
 
 signal turn_start(new_state: int)
 signal turn_end()
 signal action_consumed
 signal enemy_turn_complete
+signal inventory_closed_for_turn()
 
 func _ready() -> void:
 	print("[TurnManager] _ready() called - initializing turn system")
@@ -72,8 +74,12 @@ func is_enemy_turn() -> bool:
 	return current_state == TurnState.ENEMY_TURN
 
 func end_turn() -> void:
-	print("[TurnManager] end_turn() - current_state=%s" % (current_state))
+	print("[TurnManager] end_turn() - current_state=%s, inventory_paused=%s" % [current_state, inventory_paused])
 	if current_state == TurnState.PLAYER_TURN:
+		# Se l'inventory è aperto, attendi che l'utente lo chiuda
+		if inventory_paused:
+			print("[TurnManager] Inventory aperto, attendo chiusura...")
+			return
 		print("[TurnManager] switching to ENEMY_TURN")
 		start_enemy_turn()
 	else:

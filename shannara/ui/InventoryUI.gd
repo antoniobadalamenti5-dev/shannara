@@ -7,6 +7,7 @@ extends CanvasLayer
 
 signal inventory_opened()
 signal inventory_closed()
+signal inventory_needs_turn_commit()  # Emesso quando item used, inventory closes but turn not ended
 
 @export var panel_width: int = 320
 @export var panel_height: int = 240
@@ -112,7 +113,9 @@ func _open_inventory() -> void:
 	var turn_manager = get_node_or_null("/root/TurnManager")
 	if turn_manager != null and turn_manager.is_player_turn():
 		turn_manager.consume_action()
-		print("[InventoryUI] Turno consumato (inventario aperto)")
+		# Blocca l'enemy turn finché l'inventory è aperto
+		turn_manager.inventory_paused = true
+		print("[InventoryUI] Turno consumato, inventory_paused=true")
 	inventory_opened.emit()
 	print("[InventoryUI] Inventario aperto - is_open=%s" % _is_open)
 
@@ -121,7 +124,15 @@ func _close_inventory() -> void:
 	_is_open = false
 	visible = false
 	inventory_closed.emit()
-	print("[InventoryUI] Inventario chiuso")
+	# Rimuovi il blocco del turno
+	var turn_manager = get_node_or_null("/root/TurnManager")
+	if turn_manager != null:
+		turn_manager.inventory_paused = false
+		print("[InventoryUI] inventory_paused=false")
+		# Se l'utente ha aperto l'inventory e lo ha chiuso, il turno è finito
+		# (l'azione di apriura ha già consumato il turno)
+		turn_manager.call_deferred("end_turn")
+	print("[InventoryUI] Inventario chiuso - caller=%s" % get_stack()[0])
 
 
 func _on_close_pressed() -> void:
