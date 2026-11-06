@@ -47,12 +47,12 @@ func _ready() -> void:
 	tm.player = player
 	print("  ✓ Player created at (5, 5)")
 
-	# Step 3: Create slime close enough for HUNT (distance <= 3)
-	# Slime at (8, 5) = distance 3 from player at (5, 5)
+	# Step 3: Create slime within HUNT range (distance <= 3 for Slime)
+	# Slime at (7, 5) = distance 2 from player at (5, 5) - already in HUNT
 	print("\n3. Creating Slime (within HUNT range)...")
 	var slime_scene = preload("res://scenes/Slime.tscn")
 	var slime = slime_scene.instantiate()
-	slime.grid_x = 8  # Distance = 3 from player (5,5)
+	slime.grid_x = 7  # Distance = 2 from player (5,5) - already in HUNT
 	slime.grid_y = 5
 	slime.grid_elevation = 0
 	slime.position = Vector2((slime.grid_x + 0.5) * 32, (slime.grid_y + 0.5) * 32)
@@ -60,7 +60,7 @@ func _ready() -> void:
 	add_child(slime)
 	gs.set_occupant(slime.grid_x, slime.grid_y, slime.grid_elevation, slime)
 	slime.add_to_group("enemies")
-	print("  ✓ Slime created at (8, 5) - HUNT range (distance=3)")
+	print("  ✓ Slime created at (7, 5) - HUNT range (distance=2)")
 
 	# Step 4: Start player turn
 	print("\n4. Starting Player Turn...")
@@ -98,10 +98,15 @@ func _ready() -> void:
 		print("  ✗ ERROR: Enemy turn did not start (state=%s)" % tm.current_state)
 
 	# Step 6: Process enemy turn naturally
+	# Dopo call_deferred(_process_enemy_turn), servono più frame
 	print("\n6. Processing Enemy Turn...")
 	var slime_before_x = slime.grid_x
 	var slime_before_y = slime.grid_y
 	# Il turno nemico processa automaticamente gli nemici tramite _process_enemy_turn()
+	# call_deferred richiede 3-4 frame per completarsi
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().process_frame
 	await get_tree().process_frame
 	await get_tree().process_frame
 
@@ -116,6 +121,10 @@ func _ready() -> void:
 		print("    (May be in PATROL state)")
 
 	# Should be back to player turn
+	# Dopo end_turn() richiesti altri frame per la transizione
+	await get_tree().process_frame
+	await get_tree().process_frame
+	await get_tree().process_frame
 	await get_tree().process_frame
 	await get_tree().process_frame
 	if tm.is_player_turn():
